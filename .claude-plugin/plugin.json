@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "npmscan",
+  "displayName": "NPMScan",
+  "version": "1.0.0",
+  "description": "Detect malicious, vulnerable, or typosquatted npm packages from a conversation. Search the npm registry, inspect maintainers and install scripts before installing, and query OSV.dev / GitHub Security Advisories for one package or a whole package.json at once — via npmscan.com's free, read-only MCP server.",
+  "author": {
+    "name": "BlockHacks.io",
+    "email": "shyngys@blockhacks.io",
+    "url": "https://npmscan.com"
+  },
+  "homepage": "https://npmscan.com/docs/mcp",
+  "repository": "https://github.com/salemalem/npmscan-mcp-plugin",
+  "license": "MIT",
+  "keywords": [
+    "npm",
+    "security",
+    "supply-chain",
+    "vulnerability",
+    "dependency-audit",
+    "malware",
+    "typosquatting",
+    "osv",
+    "github-advisories"
+  ]
+}

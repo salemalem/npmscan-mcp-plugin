@@ -1,0 +1,27 @@
+{
+  "name": "npmscan",
+  "owner": {
+    "name": "BlockHacks.io",
+    "email": "shyngys@blockhacks.io",
+    "url": "https://npmscan.com"
+  },
+  "description": "NPMScan: npm package and vulnerability lookups (search, maintainer/install-script inspection, OSV.dev + GitHub Security Advisories) for Claude Code.",
+  "metadata": {
+    "description": "NPMScan: npm package and vulnerability lookups (search, maintainer/install-script inspection, OSV.dev + GitHub Security Advisories) for Claude Code."
+  },
+  "plugins": [
+    {
+      "name": "npmscan",
+      "source": "./",
+      "description": "Detect malicious, vulnerable, or typosquatted npm packages from a conversation via npmscan.com's free, read-only MCP server.",
+      "category": "security",
+      "tags": [
+        "npm",
+        "security",
+        "supply-chain",
+        "vulnerability",
+        "dependency-audit"
+      ]
+    }
+  ]
+}
