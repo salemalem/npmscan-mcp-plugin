@@ -6,21 +6,11 @@ Claude read-only npm package and vulnerability lookups, backed by
 
 ## What it adds
 
-- **MCP server** (`npmscan`, `https://npmscan.com/api/mcp`) with six tools:
-
-  | Tool | Purpose |
-  | --- | --- |
-  | `search_packages` | Search the npm registry by name or keywords |
-  | `get_package` | Latest version, install scripts (preinstall/postinstall), maintainers, license, and recent version history |
-  | `get_package_version` | Metadata for one exact version — useful for a version pinned in a lockfile |
-  | `query_vulnerabilities` | OSV.dev lookup for known vulnerabilities affecting a package, optionally scoped to a version |
-  | `batch_query_vulnerabilities` | OSV.dev lookup for up to 100 packages at once — a whole `package.json`/lockfile in one call |
-  | `get_latest_advisories` | Latest reviewed GitHub Security Advisories for the npm ecosystem, filterable by severity |
-
-  Every tool result includes an `npmscanUrl` linking back to the full
-  write-up on npmscan.com. No API key or auth required — same public data as
-  the website. The server is stateless and rate-limited to 30 requests/minute
-  per IP.
+- **MCP server** (`npmscan`, `https://npmscan.com/api/mcp`) with six tools —
+  see [Tools](#tools) below. Every tool result includes an `npmscanUrl`
+  linking back to the full write-up on npmscan.com. No API key or auth
+  required — same public data as the website. The server is stateless and
+  rate-limited to 30 requests/minute per IP.
 
 - **`/npmscan:dependency-audit` skill** — chains
   `batch_query_vulnerabilities` → `get_package`/`get_package_version` → an
@@ -29,6 +19,41 @@ Claude read-only npm package and vulnerability lookups, backed by
   when you paste a `package.json`/lockfile or ask to check/audit your
   dependencies, or invoke it directly. See
   [`skills/dependency-audit/SKILL.md`](skills/dependency-audit/SKILL.md).
+
+## Tools
+
+NPMScan provides six tools:
+
+### `search_packages`
+
+Search the npm registry by package name or keywords.
+
+### `get_package`
+
+Inspect the latest version of an npm package, including maintainers,
+license, install scripts such as `preinstall` and `postinstall`, and recent
+version history.
+
+### `get_package_version`
+
+Retrieve metadata for an exact package version. Useful when reviewing
+dependencies pinned in a lockfile.
+
+### `query_vulnerabilities`
+
+Check a package for known vulnerabilities using OSV.dev, optionally for a
+specific version.
+
+### `batch_query_vulnerabilities`
+
+Check up to 100 npm packages for known vulnerabilities in a single request.
+Useful for auditing dependencies from a `package.json` or lockfile.
+
+### `get_latest_advisories`
+
+Query the latest reviewed GitHub Security Advisories affecting the npm
+ecosystem, with filters for severity, vulnerability category, package, GHSA
+ID, and CVE ID.
 
 ## Install
 
