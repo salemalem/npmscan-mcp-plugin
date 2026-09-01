@@ -26,16 +26,17 @@ npmscan
 
 **Plugin description**
 ```
-Detect malicious, vulnerable, or typosquatted npm packages from a conversation. Search the npm registry, inspect maintainers and install scripts before installing, and query OSV.dev / GitHub Security Advisories for one package or a whole package.json at once — via npmscan.com's free, read-only MCP server.
+Detect malicious, vulnerable, or typosquatted npm packages from a conversation. Search the npm registry, inspect maintainers and install scripts before installing, and query OSV.dev / GitHub Security Advisories / NIST NVD (with CISA KEV and FIRST EPSS enrichment) for one package, one CVE, or a whole package.json at once — via npmscan.com's free, read-only MCP server.
 ```
 
 **Example use cases**
 ```
-Example 1: Paste a package.json and ask "audit my dependencies for vulnerabilities" — the dependency-audit skill batch-queries OSV.dev for every dependency, flags risky preinstall/postinstall scripts separately from known CVEs, and returns one report with npmscan.com links.
+Example 1: Paste a package.json and ask "audit my dependencies for vulnerabilities" — the dependency-audit skill batch-queries OSV.dev for every dependency, flags risky preinstall/postinstall scripts and deprecated/typosquat-flagged packages separately from known CVEs, and returns one report with fixed versions and npmscan.com links.
 Example 2: Ask "does lodash have any known vulnerabilities?" — query_vulnerabilities looks up OSV.dev for a single package.
 Example 3: Ask "find npm packages for parsing CSV files" — search_packages searches the npm registry by keyword.
-Example 4: Ask "before I install left-pad, check its maintainers and install scripts" — get_package returns maintainers, license, and preinstall/postinstall scripts as a risk signal.
+Example 4: Ask "before I install left-pad, check its maintainers and install scripts" — get_package returns maintainers, license, preinstall/postinstall scripts, and a maintenanceSummary as risk signals.
 Example 5: Ask "is minimist 1.2.5 affected by anything, and what are the latest critical npm advisories?" — get_package_version checks the pinned version, get_latest_advisories returns severity-filtered recent GitHub Security Advisories.
+Example 6: Ask "is CVE-2024-3094 actively exploited, and how severe is it?" — get_cve looks up the CVE in NIST NVD and returns its CVSS score alongside CISA KEV (known-exploited) status and FIRST EPSS (exploitation-probability) enrichment.
 ```
 
 ## Step 3: Submission details

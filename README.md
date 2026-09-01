@@ -6,11 +6,11 @@ Claude read-only npm package and vulnerability lookups, backed by
 
 ## What it adds
 
-- **MCP server** (`npmscan`, `https://npmscan.com/api/mcp`) with six tools —
-  see [Tools](#tools) below. Every tool result includes an `npmscanUrl`
-  linking back to the full write-up on npmscan.com. No API key or auth
-  required — same public data as the website. The server is stateless and
-  rate-limited to 30 requests/minute per IP.
+- **MCP server** (`npmscan`, `https://npmscan.com/api/mcp`) with seven
+  tools — see [Tools](#tools) below. Every tool result includes an
+  `npmscanUrl` linking back to the full write-up on npmscan.com. No API key
+  or auth required — same public data as the website. The server is
+  stateless and rate-limited to 30 requests/minute per IP.
 
 - **`/npmscan:dependency-audit` skill** — chains
   `batch_query_vulnerabilities` → `get_package`/`get_package_version` → an
@@ -22,7 +22,7 @@ Claude read-only npm package and vulnerability lookups, backed by
 
 ## Tools
 
-NPMScan provides six tools:
+NPMScan provides seven tools:
 
 ### `search_packages`
 
@@ -31,18 +31,29 @@ Search the npm registry by package name or keywords.
 ### `get_package`
 
 Inspect the latest version of an npm package, including maintainers,
-license, install scripts such as `preinstall` and `postinstall`, and recent
-version history.
+license, install scripts such as `preinstall` and `postinstall`, recent
+version history, GitHub stars, TypeScript support, and deterministic
+`popularityTier`/`maintenanceTier` labels with a plain-language
+`maintenanceSummary`. Flags `possibleTyposquatOf` when a low-popularity
+package's name is one typo away from a top-5,000 package. Also checks the
+latest version against OSV.dev — `isLatestVersionVulnerable`/
+`highestSeverity` give a direct safe/not-safe verdict, with severity,
+summary, and `fixedVersion` per finding.
 
 ### `get_package_version`
 
-Retrieve metadata for an exact package version. Useful when reviewing
-dependencies pinned in a lockfile.
+Retrieve metadata for an exact package version — useful when reviewing
+dependencies pinned in a lockfile — and check that exact version against
+OSV.dev for known vulnerabilities, returning `isVulnerable`/
+`highestSeverity` as a direct verdict plus severity, summary, and
+`fixedVersion` per finding.
 
 ### `query_vulnerabilities`
 
-Check a package for known vulnerabilities using OSV.dev, optionally for a
-specific version.
+Check a package for known vulnerabilities using OSV.dev, optionally scoped
+to one exact version. Returns `isVulnerable`/`highestSeverity` as a direct
+verdict, plus each finding's severity, summary, CVE aliases, and
+`fixedVersion` — not a raw advisory dump.
 
 ### `batch_query_vulnerabilities`
 
@@ -54,6 +65,15 @@ Useful for auditing dependencies from a `package.json` or lockfile.
 Query the latest reviewed GitHub Security Advisories affecting the npm
 ecosystem, with filters for severity, vulnerability category, package, GHSA
 ID, and CVE ID.
+
+### `get_cve`
+
+Look up one exact CVE ID in the NIST NVD, or browse/search NVD by keyword,
+CVSS severity, CWE, or publication-date range. Results are enriched with
+CISA KEV status (confirmed actively-exploited-in-the-wild) and FIRST.org
+EPSS (30-day exploitation probability) — falls back to the raw MITRE CVE
+record when NVD has no record yet. Unlike the other tools, NVD isn't
+npm-scoped, so pass a package name via `keywordSearch` to narrow results.
 
 ## Install
 

@@ -31,6 +31,23 @@ steps in `SKILL.md`).
    response says it chunked the request rather than silently dropping
    packages past the 100 limit.
 
+6. **Fixed-version and non-CVE risk signals** — paste a `package.json`
+   including a known-deprecated package (e.g. `request`) and ask:
+   > "Audit my dependencies for vulnerabilities."
+   Expect: the report names the exact fixed version for any flagged CVE
+   (not just "upgrade the package"), and separately calls out `request` as
+   deprecated/unmaintained via `get_package`'s `maintenanceSummary` — not
+   folded into the CVE list, and not skipped just because it has no CVEs.
+
+7. **Enrichment truncation** — a dependency list large enough (~100
+   packages with many shared transitive vulnerabilities) to cross the
+   batch tool's enrichment cap:
+   Expect: the response distinguishes fully-detailed findings from
+   ID-only ones (per `enrichmentNote`), and only calls `query_vulnerabilities`
+   on the specific ID-only packages if the user asks for their full detail
+   — not a blanket per-package re-query, and not silently presenting
+   ID-only findings as if they were fully detailed.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:dependency-audit`, or just
 invoke it directly with that name.
