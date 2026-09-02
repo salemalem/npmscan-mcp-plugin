@@ -5,9 +5,9 @@
     "email": "shyngys@blockhacks.io",
     "url": "https://npmscan.com"
   },
-  "description": "NPMScan: npm package and vulnerability lookups (search, maintainer/install-script inspection, OSV.dev + GitHub Security Advisories + NIST NVD/CVE) for Claude Code.",
+  "description": "NPMScan: npm package and vulnerability lookups (search, maintainer/provenance/install-script inspection, license compliance, PR diffs, OSV.dev + GitHub Security Advisories + NIST NVD/CVE) for Claude Code.",
   "metadata": {
-    "description": "NPMScan: npm package and vulnerability lookups (search, maintainer/install-script inspection, OSV.dev + GitHub Security Advisories + NIST NVD/CVE) for Claude Code."
+    "description": "NPMScan: npm package and vulnerability lookups (search, maintainer/provenance/install-script inspection, license compliance, PR diffs, OSV.dev + GitHub Security Advisories + NIST NVD/CVE) for Claude Code."
   },
   "plugins": [
     {
@@ -20,7 +20,9 @@
         "security",
         "supply-chain",
         "vulnerability",
-        "dependency-audit"
+        "dependency-audit",
+        "provenance",
+        "license-compliance"
       ]
     }
   ]
