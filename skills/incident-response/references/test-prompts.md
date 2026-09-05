@@ -1,0 +1,107 @@
+# Test prompts for `incident-response`
+
+Run these manually with the plugin loaded (`claude --plugin-dir ./npmscan-mcp-plugin`)
+before publishing a change to this skill. Each case names the exact tool
+calls and fields the response should surface — not just "did a tool get
+called," but "did the right playbook steps survive into the answer."
+
+1. **A full maintainer turnover, chained into remediation** — ask:
+   > "chalk's maintainers were fully replaced recently — what should I
+   > actually do about that?"
+   Expect `check_maintainer_changes({ name: "chalk" })` to run first, then
+   `get_remediation_playbook({ rules: [...] })` with whatever `rule` values
+   that call actually returned (e.g. `new-maintainer-published-quickly`).
+   The response should quote the matched playbook's real steps — for
+   `maintainer-change-flagged`: freeze to the last known-good version, check
+   repo activity/communication for transparency, require two-person review
+   for the first re-adopted versions — not a generic "be careful" answer.
+   It should also lead with that match's `situationNote` (e.g. "None of the
+   maintainers who held access before the lookback window remain at all —
+   ... a hostile takeover") and name the `severity` ("high"), not just the
+   step list on its own.
+
+2. **A provenance mismatch, chained into remediation** — ask:
+   > "check_package_provenance flagged install-script-added on
+   > @npmcli/arborist — what's the incident response?"
+   Expect `get_remediation_playbook({ rules: ["install-script-added"] })` to
+   return the `provenance-mismatch` playbook. The response should name its
+   actual steps: freeze to the last clean version, diff the flagged
+   version's install scripts/dependencies against source at the attested
+   commit, rotate the npm publish token and CI secrets for that package,
+   require `--provenance` plus a second maintainer's review going forward —
+   specifically the token-rotation step, since that's what distinguishes
+   this from a generic "audit the code" answer.
+
+3. **A clean result — no forced playbook** — ask:
+   > "lodash came back with riskTier none on check_package_provenance. What
+   > should I do?"
+   Expect the response to say plainly that no remediation/incident response
+   is needed — NOT a `get_remediation_playbook` call made just to have
+   something to show, and not an invented "clean" playbook.
+
+4. **Direct lookup by named scenario, no live finding** — ask:
+   > "What's the standard playbook for a postinstall script that downloads
+   > a binary?"
+   Expect `get_remediation_playbook({ id: "postinstall-binary" })` (no
+   package-specific finding tool call first, since no package was named) —
+   response names the real steps: block the PR/update, verify the binary
+   host is a trusted GitHub Releases/CDN, check for obfuscation/
+   child_process launches, rotate tokens if the payload ran.
+
+5. **Non-triggering — a plain trust question with no remediation ask** — ask:
+   > "Is chalk 5.3.1 safe to use?"
+   Expect `package-trust-check` to activate instead — no
+   `get_remediation_playbook` call, since the user asked a trust/investigation
+   question, not "what do I do about this."
+
+6. **Two different findings collapsing to one playbook, without repeating
+   boilerplate** — ask:
+   > "analyze_install_script flagged both obfuscation and exfil-hosts on
+   > this package. What's the incident response?"
+   Expect one `get_remediation_playbook({ rules: ["obfuscation", "exfil-hosts"] })`
+   call (not two separate calls) returning a single
+   `supply-chain-compromise` playbook entry in `playbooks`, but two entries
+   in `matches` — one per rule, each with its own distinct `situationNote`.
+   The response should present the playbook's steps once, not twice, while
+   still naming both specific things that were found (the obfuscated code
+   and the exfil-host contact) rather than only mentioning one or merging
+   them into a single generic sentence.
+
+7. **Vague, non-technical symptom, no package name and no exact rule id** —
+   ask:
+   > "npm install did something weird just now — it looked like it grabbed
+   > a file from some random website and then ran it. What do we do?"
+   The user never says "postinstall," "binary," or any tool/rule vocabulary.
+   Expect the model to still recognize this as the postinstall-binary
+   scenario per the symptom table and call
+   `get_remediation_playbook({ id: "postinstall-binary" })` directly (no
+   package name given, so no finding tool to run first) — NOT a refusal, and
+   NOT a request that the user "be more specific" or name a `rule`/id
+   themselves first. The response should flag that this is a best-read
+   guess from the description, not a confirmed diagnosis, then give the
+   real steps (block the PR/update, verify the binary host, check for
+   obfuscation/child_process, rotate tokens if it ran).
+
+8. **A named package with a vague symptom, but enough to pick one finding
+   tool** — ask:
+   > "Is glob-utils-pro safe? A teammate said it does something sketchy
+   > during npm install."
+   "Sketchy during npm install" names a package AND a specific-enough
+   symptom (install-time behavior) to skip the full package-trust-check
+   sweep and go straight to `analyze_install_script({ name: "glob-utils-pro" })`
+   per the symptom table, then chain into `get_remediation_playbook` with
+   whatever `rule`s it actually returns (or say plainly that nothing was
+   flagged if the scan comes back clean).
+
+9. **Totally generic — the one case that should still ask a question** —
+   ask:
+   > "We got a security alert about one of our dependencies. What do I do?"
+   No package name, no symptom, nothing to ground a guess in. Expect the
+   model to ask one clarifying question (which package, or what the alert
+   actually said) rather than guessing a random playbook id or refusing to
+   engage — this is the single row in the symptom table where asking is the
+   right move, not the default.
+
+To confirm the skill loaded and is namespaced correctly, run `/help` and
+check the **Custom commands** tab for `/npmscan:incident-response`, or just
+invoke it directly with that name.

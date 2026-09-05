@@ -1,5 +1,55 @@
 # Changelog
 
+## 1.3.0
+
+- Adds eight tools, bringing the server to twenty-three total:
+  - `get_maintainer_profile` — every package an npm username currently
+    maintains via npm's own `maintainer:<username>` search index, plus
+    precomputed download/dependent totals.
+  - `check_maintainer_blast_radius` — finds every package an npm maintainer
+    account touches and flags a tight publish cluster within a short
+    window, the compromised-account pattern behind incidents like the 2025
+    chalk/debug ("qix") compromise and the 2026 keyv/cacheable ("Shai-Hulud")
+    worm.
+  - `compare_packages` — given 2-5 candidate packages for the same job,
+    fans the same enrichment `get_package` computes out in parallel and
+    returns a structured side-by-side plus a deterministic, reasoned pick.
+  - `audit_github_repository` — given a GitHub repo URL, fetches its
+    manifest/lockfile from the default branch (auto-detecting monorepos)
+    and runs the vulnerability/license/install-script/ownership pipelines
+    in one call.
+  - `get_remediation_playbook` — maps a finding's `rule` value (or a
+    plain-language symptom) to a human-authored incident-response playbook
+    with concrete steps, severity, real-incident references, and
+    prevention tips.
+  - `generate_sbom` — generates a spec-valid CycloneDX or SPDX SBOM with
+    npmscan's own vulnerability/license findings embedded in each format's
+    native fields.
+  - `enrich_npm_audit` — ingests raw `npm audit --json` output (npm 7+ or
+    legacy npm 6 format) directly and ranks it with the same KEV/EPSS/
+    severity scoring as `prioritize_remediation`.
+  - `simulate_dependency_upgrade` — classifies a specific version jump as
+    safe/low-risk/review-recommended/breaking-change-likely by semver,
+    deprecation, install-script, engine, and vulnerability-delta checks.
+- Adds three new skills:
+  - `/npmscan:new-dependency-evaluation` — orchestrates `compare_packages`/
+    `suggest_alternative`/`search_packages` for a forward-looking "what
+    should we add" decision, distinct from auditing what's already
+    installed.
+  - `/npmscan:incident-response` — turns an existing finding, or a vague
+    symptom description, into concrete `get_remediation_playbook` steps.
+  - `/npmscan:ci-pr-gate` — turns a dependency change into one
+    deterministic PASS/WARN/FAIL verdict formatted for a CI check or
+    PR-comment bot, applying a fixed policy on top of `diff_dependencies`/
+    `simulate_dependency_upgrade`.
+- Updates the `dependency-audit` skill to accept raw `npm audit --json`
+  output (via `enrich_npm_audit`) and a bare GitHub repository URL (via
+  `audit_github_repository`) as input, and to follow up a flagged
+  maintainer-turnover finding with `check_maintainer_blast_radius`.
+- Updates the `package-trust-check` skill to cross-reference
+  `new-dependency-evaluation` for forward-looking "should we add X"
+  questions.
+
 ## 1.2.0
 
 - Adds eight tools, bringing the server to fifteen total:

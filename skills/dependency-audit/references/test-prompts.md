@@ -161,6 +161,69 @@ survive into the final report."
     surface directly — the response should say "you don't need a package
     for this," not pad the answer with unrelated package suggestions.
 
+21. **Raw `npm audit --json`, GHSA-only input resolved to a real CVE** —
+    paste:
+    > ```json
+    > {
+    >   "auditReportVersion": 2,
+    >   "vulnerabilities": {
+    >     "minimist": {
+    >       "name": "minimist",
+    >       "severity": "critical",
+    >       "isDirect": true,
+    >       "via": [{
+    >         "source": 1179, "name": "minimist", "dependency": "minimist",
+    >         "title": "Prototype Pollution in minimist",
+    >         "url": "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+    >         "severity": "critical", "cwe": ["CWE-1321"],
+    >         "cvss": { "score": 9.8 }, "range": "<1.2.6"
+    >       }],
+    >       "effects": [], "range": "<1.2.6", "nodes": ["node_modules/minimist"],
+    >       "fixAvailable": true
+    >     }
+    >   },
+    >   "metadata": { "vulnerabilities": { "critical": 1, "total": 1 } }
+    > }
+    > ```
+    and ask "What should I fix first from this npm audit?" — do NOT ask the
+    user to restate this as a package.json/lockfile or a findings list.
+    `enrich_npm_audit` should parse it directly, report
+    `inputFormat: "npm-audit-v2"`, resolve the GHSA to `cveId: "CVE-2021-44906"`
+    (`ghsaResolvedToCveCount: 1`) via OSV, and rank it same as scenario 1's
+    minimist finding. Expect the response to cite the resolved CVE id, not
+    just the bare GHSA id from the pasted JSON.
+
+22. **Legacy npm 6 `npm audit --json` format** — paste:
+    > ```json
+    > {
+    >   "advisories": {
+    >     "1179": {
+    >       "id": 1179, "module_name": "minimist", "severity": "critical",
+    >       "cves": ["CVE-2021-44906"], "title": "Prototype Pollution in minimist",
+    >       "url": "https://github.com/advisories/GHSA-xvch-5gv4-984h",
+    >       "vulnerable_versions": "<1.2.6", "patched_versions": ">=1.2.6",
+    >       "findings": [{ "version": "1.2.5", "paths": ["minimist"] }]
+    >     }
+    >   },
+    >   "metadata": { "vulnerabilities": { "critical": 1 } }
+    > }
+    > ```
+    Expect `inputFormat: "npm-audit-legacy"`, `cveId: "CVE-2021-44906"` taken
+    straight from the source JSON (no OSV lookup needed —
+    `ghsaResolvedToCveCount: 0`), and `currentVersion: "1.2.5"` from
+    `findings[0].version` — legacy is the one format where an exact
+    installed version is available at all.
+
+23. **GitHub repository URL, no pasted content** — ask:
+    > "Audit https://github.com/expressjs/express for dependency issues."
+    Expect `audit_github_repository({ url: "https://github.com/expressjs/express" })`
+    called directly — no request to paste `package.json`/lockfile contents
+    first. Expect the response to state the detected lockfile (or that none
+    was found and ranges were resolved from `package.json` alone), whether a
+    monorepo was detected, and to name any flagged install script's
+    `installScriptScanScope` (`lifecycle-scripts-only` vs
+    `deep-tarball-scan`).
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:dependency-audit`, or just
 invoke it directly with that name.

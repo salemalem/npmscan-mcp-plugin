@@ -17,7 +17,10 @@ to audit multiple packages, use the `dependency-audit` skill instead — don't
 run this skill's checks across a whole inventory. If the question is purely
 factual with no trust/safety angle ("what does lodash do," "what's the
 latest version of express"), just answer directly with `get_package` — don't
-invoke the full investigation for that.
+invoke the full investigation for that. If the user is instead choosing
+between candidates for something not yet installed ("should we add X," "X
+vs Y for this job"), that's a forward-looking pick, not a trust
+investigation — use the `new-dependency-evaluation` skill.
 
 ## Steps
 
@@ -52,9 +55,9 @@ invoke the full investigation for that.
    stolen-npm-token publish pattern. This is structural verification, not a
    cryptographic re-check of the Sigstore bundle — say so if the user asks
    how deep it goes.
-4. If `get_package`/`get_package_version` in step 1 showed a
-   `preinstall`/`postinstall`/`prepare` entry in `scripts`, follow up with
-   `analyze_install_script({ name, version })`. It fetches the published
+4. If `get_package`/`get_package_version` in step 1 showed
+   `hasLifecycleScripts`/a `preinstall`/`postinstall`/`prepare` entry, follow
+   up with `analyze_install_script({ name, version })`. It fetches the published
    tarball and statically scans the script — and the files it references —
    against npmscan's red-flags rubric (child_process, network calls,
    `.ssh`/`.aws`/`.npmrc`/`*TOKEN`/`*KEY` access, obfuscation, remote

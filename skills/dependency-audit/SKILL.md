@@ -13,7 +13,12 @@ with `get_package` or `query_vulnerabilities`; a single-package *trust*
 question ("is X safe," "was X compromised/hijacked") should use the
 `package-trust-check` skill instead, which runs the deeper
 maintainer-history and publish-provenance checks this skill deliberately
-reserves for already-flagged packages only.
+reserves for already-flagged packages only. A forward-looking question about
+what to *add* rather than what's already installed ("should we add X," "X
+vs Y vs Z for this job," "what should we use to do X") should use the
+`new-dependency-evaluation` skill instead — it orchestrates
+`compare_packages`/`suggest_alternative` for exactly that decision, which
+this skill's per-inventory vulnerability/license flow isn't built for.
 
 ## Input
 
@@ -24,6 +29,35 @@ Accept dependency name+version pairs from:
 - Pasted lockfile contents (`package-lock.json`, `yarn.lock`, `pnpm-lock.yaml`).
 - Pasted CycloneDX JSON or SPDX JSON SBOM contents.
 - A plain list the user typed, e.g. "lodash 4.17.15, express 4.17.1".
+- Raw `npm audit --json` output (npm 7+'s `{vulnerabilities: {...}}` format,
+  or legacy npm 6's `{advisories: {...}}`) — do NOT re-parse this by hand
+  into a `packages` list for `batch_query_vulnerabilities`. Call
+  `enrich_npm_audit({ content })` directly instead: it parses the report
+  itself, resolves each finding's GHSA advisory to a CVE alias via OSV
+  (npm audit JSON almost never carries a CVE id on its own), and returns the
+  same patch-now/patch-soon/scheduled/monitor ranking as step 9 below in one
+  call — this replaces steps 1, 3, and 9 for the findings it covers, though
+  steps 4-8 (install scripts, maintainer/provenance checks, license
+  compliance) still need the package names it flagged run through those
+  tools separately, since npm audit's own JSON has no license/maintainer/
+  install-script data. `yarn audit --json`/`pnpm audit --json` are not
+  supported — treat those like a lockfile paste (step 1) instead.
+- A GitHub repository URL (e.g. "audit https://github.com/owner/repo") — do
+  NOT ask the user to paste `package.json`/lockfile contents in this case.
+  Call `audit_github_repository({ url })` directly instead: it fetches the
+  manifest/lockfile from the repo's default branch itself and runs steps 3,
+  4, 6, and 8 below (vulnerability, install-script signal, license
+  compliance, and — for whatever it flagged as critical/high severity, a
+  possible typosquat, or deprecated — the `check_maintainer_changes`/
+  `check_package_provenance` ownership checks too, up to 5 packages per call,
+  prioritized the same way step 6 already ranks them) in one call, replacing
+  that part of the flow below. Check `ownershipCheckNote` for any flagged
+  package past that 5-package cap and call the two ownership tools on those
+  directly. Still follow up per-package with `analyze_install_script` (for a
+  package the tool's lighter `installScriptScanScope:
+  "lifecycle-scripts-only"` signal flagged but didn't deep-scan — check
+  `deepScanNote`) and `suggest_alternative` the same way you would from the
+  pasted-content flow.
 
 If the user instead pastes **two** snapshots and asks what changed (a PR,
 before/after, "did this upgrade introduce anything") — see
@@ -31,7 +65,8 @@ before/after, "did this upgrade introduce anything") — see
 of the single-inventory flow.
 
 If the message contains no parseable package list at all, ask the user to
-paste their `package.json` or lockfile rather than guessing at what to audit.
+paste their `package.json` or lockfile — or give a GitHub repo URL — rather
+than guessing at what to audit.
 
 ## Steps
 
@@ -89,12 +124,19 @@ paste their `package.json` or lockfile rather than guessing at what to audit.
      from the npm packument and flags account-takeover patterns (a new
      maintainer who published shortly after being added, a sudden full
      maintainer-list replacement, a long-standing maintainer quietly
-     dropped) plus GitHub repo transfers/archival.
+     dropped) plus GitHub repo transfers/archival. If it flags a newly added
+     or fully turned-over maintainer, follow up with
+     `check_maintainer_blast_radius({ maintainerUsername })` on that
+     account — it lists every other package the same account currently
+     touches and flags a tight cluster of packages published within a short
+     window of each other, the compromised-account shape behind the 2025
+     chalk/debug ("qix") incident (~18 packages within ~2 hours). A large
+     total package count alone is not a red flag; only a tight cluster is.
    - `check_package_provenance` — checks npm's Sigstore publish provenance
      against reality: does the attested source repo/commit match
      `package.json`'s declared repository, is this package missing
      provenance while its npm-scope/maintainer peers consistently have it,
-     and does the tarball's install scripts/dependencies match what's
+     and does the tarball's actual install scripts/dependencies match what's
      actually committed at the attested source commit (a mismatch here is
      the stolen-npm-token publish pattern). Structural only, not a
      cryptographic re-verification.
@@ -155,6 +197,11 @@ replaces the batch-query flow above, it doesn't precede it.
   yarn.lock covers every resolved package in the file, not just direct
   dependencies — say so if relevant to what changed.
 
+If the user instead wants a machine-parseable PASS/WARN/FAIL merge
+verdict — for a CI check or a PR-comment bot, not a conversational
+explanation — use the `ci-pr-gate` skill instead; it applies a fixed policy
+on top of the same `diff_dependencies`/`simulate_dependency_upgrade` output.
+
 ## Output requirements
 
 - Always include the `npmscanUrl` for every flagged package so the user can
@@ -188,6 +235,11 @@ replaces the batch-query flow above, it doesn't precede it.
 - Do not treat a missing `provenance` or a repository transfer as confirmed
   compromise on its own — both tools return hedged findings meant to prompt
   verification, not a verdict.
+- Do not treat a large `totalPackagesFound` from `check_maintainer_blast_radius`
+  as a red flag by itself — many legitimate maintainers publish hundreds of
+  packages over a career. Only a `tight-publish-cluster` finding (several
+  packages' latest versions landing within a short window of each other) is
+  the actual signal.
 - Do not invent a replacement package name — `suggest_alternative` already
   distinguishes maintainer-named replacements from category-matched guesses
   and reports `nonPackageAlternatives` when no package is the right answer;
@@ -199,9 +251,10 @@ replaces the batch-query flow above, it doesn't precede it.
 
 `batch_query_vulnerabilities`, `get_package`, `get_package_version`,
 `analyze_install_script`, `analyze_transitive_dependencies`,
-`check_maintainer_changes`, `check_package_provenance`,
-`check_license_compliance`, `diff_dependencies`, `prioritize_remediation`,
-`suggest_alternative`, `get_latest_advisories` — all provided by the
+`check_maintainer_changes`, `check_maintainer_blast_radius`,
+`check_package_provenance`, `check_license_compliance`, `diff_dependencies`,
+`prioritize_remediation`, `enrich_npm_audit`, `suggest_alternative`,
+`get_latest_advisories`, `audit_github_repository` — all provided by the
 `npmscan` MCP server bundled with this plugin (`.mcp.json`). See
 [references/test-prompts.md](references/test-prompts.md) for prompts to
 manually verify this skill after installing or editing it.
