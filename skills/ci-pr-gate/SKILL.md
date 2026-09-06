@@ -29,18 +29,26 @@ they want to know what to actually *do* about a finding, hand off to
    `diff_dependencies({ before, after })` directly.
 2. **One or more named bumps with no full snapshots** — the common
    Renovate/Dependabot PR-title shape ("Bump lodash from 3.10.1 to
-   4.17.21," "upgrade minimist to 1.2.6") — call
+   4.17.21," "upgrade minimist to 1.2.6") — for a single named package, call
    `simulate_dependency_upgrade({ packageName, currentVersion,
-   targetVersion })` once per named package. There is no batch variant of
-   this tool. Cap it at 25 packages in one turn; if more were named, run
-   the first 25 and say explicitly which were skipped rather than silently
-   dropping them.
+   targetVersion })` directly. For more than one named package in the same
+   PR, use the tool's own batch form instead of calling it once per
+   package: `simulate_dependency_upgrade({ packages: [{ packageName,
+   currentVersion, targetVersion }, ...] })`, one call for the whole set
+   (up to 100 items). The batch result comes back as `results[]` (one entry
+   per item, each shaped like the single-item result plus a `fetchError`
+   field for a name that couldn't be resolved at all) plus a `batchSummary`
+   (`totalRequested`, `fetchFailedCount`, `riskTierCounts`,
+   `vulnQueryFailedCount`) — read every entry in `results[]` into the Gate
+   policy below, not just the summary counts. Cap it at 100 packages in one
+   turn (the tool's own limit); if more were named, run the first 100 and
+   say explicitly which were skipped rather than silently dropping them.
 3. **Both** (full snapshots plus one or more specific packages the user
    wants a deeper semver/breaking-change read on beyond what a diff
-   computes) — run `diff_dependencies` first, then add
-   `simulate_dependency_upgrade` calls only for the specifically-named
-   packages. Don't run both tools for the same package by default; that's
-   redundant.
+   computes) — run `diff_dependencies` first, then add a
+   `simulate_dependency_upgrade` call (single-item or batch, per case 2)
+   only for the specifically-named packages. Don't run both tools for the
+   same package by default; that's redundant.
 4. **Nothing parseable** — ask for the before/after content or the exact
    `name@current→target` bump(s). Don't guess a version that wasn't given.
 
@@ -174,8 +182,14 @@ Checked N package(s), M flagged.
 - Do not run both `diff_dependencies` and `simulate_dependency_upgrade` on
   the same package in the same request "just in case" — route per the
   input-shape table once.
-- Do not silently cap a >25-package batch of named bumps without saying
+- Do not call `simulate_dependency_upgrade` once per package when more than
+  one named bump is being gated in the same request — use its `packages`
+  batch input in one call instead.
+- Do not silently cap a >100-package batch of named bumps without saying
   which ones were skipped.
+- Do not drop a `fetchError` batch entry from the "all packages checked"
+  table — it gets its own row with verdict WARN, same as any other
+  unresolved entry.
 - Do not add a conversational summary, caveats paragraph, or follow-up
   question after the output contract — the structured verdict is the
   entire deliverable. If something is genuinely too ambiguous to gate

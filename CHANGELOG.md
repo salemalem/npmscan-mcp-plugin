@@ -1,6 +1,11 @@
 # Changelog
 
-## 1.3.0
+## 3.0.0
+
+Jumps straight to 3.0.0 (skipping 2.x) to stay clear of a separate 2.0.0
+submission of this plugin already in review on the Claude plugin
+marketplace — same reasoning the npmscan MCP server's own `mcp/server.json`
+used when it jumped to 3.0.0 instead of 2.0.0.
 
 - Adds eight tools, bringing the server to twenty-three total:
   - `get_maintainer_profile` — every package an npm username currently
@@ -30,7 +35,8 @@
     severity scoring as `prioritize_remediation`.
   - `simulate_dependency_upgrade` — classifies a specific version jump as
     safe/low-risk/review-recommended/breaking-change-likely by semver,
-    deprecation, install-script, engine, and vulnerability-delta checks.
+    deprecation, install-script, engine, and vulnerability-delta checks;
+    accepts either one package or a `packages` batch of up to 100.
 - Adds three new skills:
   - `/npmscan:new-dependency-evaluation` — orchestrates `compare_packages`/
     `suggest_alternative`/`search_packages` for a forward-looking "what

@@ -83,11 +83,13 @@ verdict.
    fabricated WARN over a text-level difference that isn't a real version
    change.
 
-9. **Multi-package batch — overall verdict is the worst single result.**
-   Ask to gate three named bumps in one PR: minimist 1.2.5→1.2.6 (clean
-   patch fixing a CVE), lodash 3.10.1→4.17.21 (major, clean OSV), chalk
-   0.4.0→0.5.0 (pre-1.0 minor, clean OSV). Expect three
-   `simulate_dependency_upgrade` calls, one combined table with minimist
+9. **Multi-package batch — one batch call, overall verdict is the worst
+   single result.** Ask to gate three named bumps in one PR: minimist
+   1.2.5→1.2.6 (clean patch fixing a CVE), lodash 3.10.1→4.17.21 (major,
+   clean OSV), chalk 0.4.0→0.5.0 (pre-1.0 minor, clean OSV). Expect ONE
+   `simulate_dependency_upgrade({ packages: [...] })` batch call (not three
+   separate single-item calls), returning `results[]` with one entry per
+   package plus a `batchSummary`. Expect one combined table with minimist
    at PASS and the other two at WARN, and an overall `GATE: WARN` — not
    `PASS` (a clean package shouldn't average out a WARN elsewhere) and not
    `FAIL` (nothing here actually triggers a FAIL rule).
