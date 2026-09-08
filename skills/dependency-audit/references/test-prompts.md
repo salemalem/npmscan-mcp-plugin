@@ -224,6 +224,130 @@ survive into the final report."
     `installScriptScanScope` (`lifecycle-scripts-only` vs
     `deep-tarball-scan`).
 
+24. **A nonexistent package name is not read as clean** — paste:
+    > `{ "dependencies": { "definitely-not-a-real-package-xyz-12345": "1.0.0", "is-number": "7.0.0" } }`
+    and ask "Audit my dependencies for vulnerabilities." Verified live:
+    `batch_query_vulnerabilities` returns
+    `unresolvedPackages: ["definitely-not-a-real-package-xyz-12345"]` and an
+    `existenceCheckNote` explaining that name couldn't be found on the npm
+    registry, alongside a `vulnerabilityCount: 0` entry for it that looks
+    identical to the genuinely clean `is-number` result. Expect the report
+    to flag the nonexistent name as its own finding (never installed under
+    this name? typo?) — not list it as "no known vulnerabilities" next to
+    the real clean package.
+
+25. **CycloneDX SBOM with duplicate/unversioned entries and a percent-encoded
+    scoped purl** — paste:
+    > ```json
+    > {
+    >   "bomFormat": "CycloneDX", "specVersion": "1.6",
+    >   "components": [
+    >     { "type": "library", "name": "lodash", "purl": "pkg:npm/lodash" },
+    >     { "type": "library", "name": "lodash", "version": "4.17.21",
+    >       "purl": "pkg:npm/lodash@4.17.21" },
+    >     { "type": "library", "name": "@babel/core", "version": "7.23.0",
+    >       "purl": "pkg:npm/%40babel/core@7.23.0" },
+    >     { "type": "library", "name": "bad name", "version": "1.0.0",
+    >       "purl": "pkg:npm/bad%20name@1.0.0" }
+    >   ]
+    > }
+    > ```
+    and ask "Scan this SBOM for vulnerabilities." Expect
+    `batch_query_vulnerabilities` to detect `cyclonedx-json`, dedupe the two
+    `lodash` entries down to one `lodash@4.17.21`, correctly decode
+    `@babel/core@7.23.0` from the percent-encoded scoped purl, and return
+    `ignoredCount: 1` with a warning naming the invalid npm name — not a
+    silent drop, a crash, or two separate `lodash` rows.
+
+26. **`audit_github_repository` on a real npm-workspaces monorepo** — ask:
+    > "Audit https://github.com/npm/cli for vulnerable or risky
+    > dependencies."
+    Expect `isMonorepo: true`, `workspacePatterns` including
+    `"workspaces/*"`, a double-digit `workspacePackageCount`, and
+    `@npmcli/query` — a dependency of the `arborist` workspace member, not
+    the root manifest — surfacing among `findings`. This confirms the tool
+    actually walked workspace members rather than only scanning the root
+    `package.json`.
+
+27. **Ownership-check cap: prioritized vulnerable > typosquat > deprecated**
+    — describe (or construct) a repo/inventory with 6 flagged packages: 2
+    critical-CVE, 2 possible-typosquat, 2 deprecated, scrambled in order,
+    and ask for a full ownership/provenance audit. Expect
+    `ownershipCheckedCount: 5` — both vulnerable and both typosquat packages
+    checked, only the first of the two deprecated ones — and
+    `ownershipCheckNote` containing "1 additional package(s)" and "past the
+    ownership-check cap (5 per call)" verbatim. Expect the response to state
+    the cap and the prioritization explicitly, not silently truncate to 5.
+
+28. **`check_maintainer_blast_radius`: a second, independent real compromise
+    pattern (jaredwray, Aug 2026)** — ask:
+    > "Check the maintainer blast radius for the npm account jaredwray."
+    Expect a flagged tight-publish-cluster naming `cache-manager`,
+    `cacheable`, `flat-cache`, and `file-entry-cache` (published within ~42
+    seconds of each other, ~343M combined weekly downloads), `riskTier:
+    "high"` or `"critical"` — and, unlike the qix/chalk case already
+    covered, `stillCurrentMaintainerCount` staying high, since this
+    account itself was compromised rather than a maintainer being swapped
+    out. Expect the response to name this as a distinct incident, not
+    conflate it with the chalk/qix pattern.
+
+29. **`check_maintainer_blast_radius`: a huge legitimate footprint that
+    still contains a real cluster** — ask:
+    > "Is sindresorhus's npm account concerning from a blast-radius
+    > perspective?"
+    Expect `totalPackagesFound` in the high hundreds or more,
+    `packagesReturned: 250` (the one-page cap), `resultsTruncated: true`,
+    `clusterWindowHours: 72` — and critically, the response must not wave
+    this off as "clean because prolific": any finding present is still
+    `tight-publish-cluster` (e.g. `parent-module`/`is-docker`/
+    `locate-path`/`find-up` published within ~18 hours of each other),
+    which is the actual signal regardless of the account's overall size.
+
+30. **License sweep: real proprietary and network-copyleft licenses** —
+    paste:
+    > `{ "dependencies": { "@factory/cli-linux-x64": "*", "budibase": "*",
+    > "lodash": "4.17.21" } }`
+    and ask "Does anything here violate our license policy?" Expect
+    `check_license_compliance` (default policy) to flag
+    `@factory/cli-linux-x64` (`rawLicense: "UNLICENSED"`, `category:
+    "proprietary"`) and `budibase` (`rawLicense: "AGPL-3.0-or-later"`,
+    `category: "network-copyleft"`) both `isCompliant: false`, while
+    `lodash` stays compliant. Expect the response to name the AGPL
+    "-or-later" suffix and the network-copyleft category correctly rather
+    than folding both into a generic "GPL" label.
+
+31. **`enrich_npm_audit`: an empty report is rejected, not silently
+    "clean"** — paste:
+    > `{ "auditReportVersion": 2, "vulnerabilities": {}, "metadata": {
+    > "vulnerabilities": { "total": 0 } } }`
+    and ask "What should I fix first from this npm audit?" Expect a clear
+    rejection (`tool_error`) whose detail states there's nothing to rank
+    ("No advisory-bearing...") — not a fabricated "you're all clear"
+    success framed as if the tool actually analyzed something.
+
+32. **`enrich_npm_audit`: a fix that requires bumping a different (parent)
+    package** — paste an `npm audit --json` v2 report where a vulnerable
+    package's `fixAvailable` names a different parent package, e.g.:
+    > ```json
+    > {
+    >   "vulnerabilities": {
+    >     "pkg-fixed-elsewhere": {
+    >       "name": "pkg-fixed-elsewhere", "severity": "high",
+    >       "isDirect": false, "via": [{ "source": 1, "name": "pkg-fixed-elsewhere",
+    >         "title": "Some vulnerability", "severity": "high" }],
+    >       "fixAvailable": { "name": "parent-pkg", "version": "2.0.0",
+    >         "isSemVerMajor": false }
+    >     }
+    >   },
+    >   "metadata": { "vulnerabilities": { "high": 1, "total": 1 } }
+    > }
+    > ```
+    and ask for the remediation plan. Expect the response to name
+    `parent-pkg@2.0.0` as the actual fix target and explicitly NOT claim
+    `pkg-fixed-elsewhere` itself has a `fixedVersion` — the two are
+    different fields for a reason, and conflating them tells the user to
+    bump the wrong package.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:dependency-audit`, or just
 invoke it directly with that name.

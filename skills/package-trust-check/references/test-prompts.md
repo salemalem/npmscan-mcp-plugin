@@ -105,6 +105,57 @@ into the answer."
     — the exact replacement names should appear in the answer, not a
     generic "consider migrating away."
 
+11. **An empty malware-feed check is not read as full clearance** — ask:
+    > "Is lodash safe to use?"
+    `get_latest_advisories({ type: "malware", affects: "lodash" })` should
+    come back with no matching advisories (lodash has never been flagged as
+    known malware). Expect the response to still run the rest of the
+    checks (maintainer changes, provenance, install script) rather than
+    stopping at "not in the malware feed, so it's safe" — an empty result
+    from that one feed is not, on its own, a full clean bill of health.
+
+12. **A long-standing maintainer quietly dropped, not a full turnover** —
+    ask:
+    > "A package's maintainer list dropped someone who had been publishing
+    > releases for over a year, while the remaining maintainers stayed the
+    > same and kept publishing normally. Is that on its own something to
+    > worry about?"
+    Expect the model to describe this as the `maintainer-removed-recently`
+    finding — a lower-severity signal than a full turnover (the underlying
+    rule scores it well below the high/critical tier a full replacement
+    gets) — and to recommend the same verification posture as other
+    maintainer-change findings, not silence and not alarm-level either.
+    **Note:** this is a synthetic-fixture-only pattern (no live package in
+    the repo's own tests exhibits it) — treat this as testing the skill's
+    grasp of the rule's meaning and relative severity, not a live tool-call
+    verification.
+
+13. **A full maintainer-list replacement, contrasted against chalk's
+    single addition** — ask:
+    > "How would you tell the difference between chalk's situation (one
+    > new maintainer added) and a case where every single maintainer on a
+    > package was replaced at once?"
+    Expect the response to correctly describe `full-maintainer-turnover`
+    as the more severe finding — it stacks with `maintainer-added-recently`
+    to a `critical` tier when the replacement team also publishes the next
+    release themselves — not treat "a maintainer changed" as a single
+    undifferentiated risk level regardless of how much of the list turned
+    over. **Note:** same synthetic-fixture caveat as case 12 — no live
+    package in the repo's tests exhibits a full turnover.
+
+14. **Pending maintainer change vs. dormant package — the two ends of the
+    "access changed, nothing shipped" case** — ask two variants of "a
+    maintainer was just added to a package's npm listing, but no release
+    has shipped with them yet — how urgent is that?": once assuming the
+    package released something recently (expect this framed as urgent —
+    access already changed, and there's no version yet to warn users off
+    of, so the risk is live right now) and once assuming the package
+    hasn't shipped in years (expect the response to note this falls
+    outside the tool's lookback window given the package's dormancy, and
+    to describe it as a much lower-urgency case rather than applying the
+    same urgency framing regardless of activity). **Note:**
+    synthetic-fixture-only, same caveat as cases 12-13.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:package-trust-check`, or
 just invoke it directly with that name.

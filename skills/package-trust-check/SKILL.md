@@ -30,7 +30,19 @@ investigation — use the `new-dependency-evaluation` skill.
    `downloadTrend`, and days-since-last-publish. This alone answers a good
    chunk of "should I trust this" and grounds the deeper checks that follow —
    don't skip straight to the maintainer/provenance tools without it.
-2. Call `check_maintainer_changes({ name })`. It reconstructs maintainer
+2. Call `get_latest_advisories({ type: "malware", affects: name })` — a
+   cheap, direct check of whether this exact package has ever been flagged
+   in GitHub's known-malicious-packages feed (e.g. OpenSSF's
+   malicious-packages list), independent of the CVE-backed advisories
+   `query_vulnerabilities`/`batch_query_vulnerabilities` already cover. A
+   hit here is the single most severe possible finding — almost none of
+   these advisories carry a CVE or a meaningful CWE beyond "embedded
+   malicious code," so don't expect one, and don't skip reporting a hit
+   just because it lacks the fields a CVE-backed finding would have. An
+   empty result means nothing was found in this feed specifically — it is
+   not, on its own, a full clean bill of health; still run the rest of the
+   checks below.
+3. Call `check_maintainer_changes({ name })`. It reconstructs maintainer
    add/remove history from the npm packument and flags:
    - a maintainer added recently who then published shortly after (the
      account-takeover pattern behind the Sept 2025 chalk/debug "qix"
@@ -43,7 +55,7 @@ investigation — use the `new-dependency-evaluation` skill.
    Also reports GitHub repository transfer/archival — a transfer isn't
    automatically hostile (e.g. jade → pug was a documented rename), say so
    rather than treating every transfer as a red flag.
-3. Call `check_package_provenance({ name, version })`. Three checks in one
+4. Call `check_package_provenance({ name, version })`. Three checks in one
    call: does the Sigstore build attestation's source repo/commit match
    `package.json`'s declared repository; is this version missing provenance
    while its npm-scope or maintainer peers consistently publish with it (a
@@ -55,7 +67,7 @@ investigation — use the `new-dependency-evaluation` skill.
    stolen-npm-token publish pattern. This is structural verification, not a
    cryptographic re-check of the Sigstore bundle — say so if the user asks
    how deep it goes.
-4. If `get_package`/`get_package_version` in step 1 showed
+5. If `get_package`/`get_package_version` in step 1 showed
    `hasLifecycleScripts`/a `preinstall`/`postinstall`/`prepare` entry, follow
    up with `analyze_install_script({ name, version })`. It fetches the published
    tarball and statically scans the script — and the files it references —
@@ -65,13 +77,13 @@ investigation — use the `new-dependency-evaluation` skill.
    returning a `totalScore`/`riskTier`. A nonzero score isn't automatically
    malicious — a legitimate binary download (e.g. `cypress`) scores nonzero
    too — so report the actual `findings`, not just the score.
-5. If the combined picture ends up genuinely concerning (a maintainer-
+6. If the combined picture ends up genuinely concerning (a maintainer-
    takeover pattern, a provenance mismatch, a `possibleTyposquatOf` hit, or a
    critical install-script finding), offer — don't force —
    `suggest_alternative({ name, reason })` with `reason` set to whichever of
    `"vulnerable"`/`"abandoned"`/`"typosquat"`/`"general"` best fits, so the
    user has a next step instead of just a warning.
-6. Produce one findings report, most-concerning signal first:
+7. Produce one findings report, most-concerning signal first:
    - State the verdict per check plainly (e.g. "no maintainer-change red
      flags in the lookback window," not silence-as-clean).
    - Every finding from `check_maintainer_changes`/`check_package_provenance`
@@ -106,12 +118,19 @@ investigation — use the `new-dependency-evaluation` skill.
   ran first.
 - Do not attempt to install, upgrade, or publish packages yourself; this
   skill only reads data through NPMScan's read-only MCP tools.
+- Do not treat an empty `get_latest_advisories({ type: "malware" })` result
+  as a full clearance — it only rules out this one known-malicious-packages
+  feed; still run the maintainer/provenance/install-script checks that
+  follow. Conversely, do not soften a real hit from it into a hedged
+  "worth verifying" the way a `check_maintainer_changes`/
+  `check_package_provenance` finding is — a match in this feed is itself a
+  confirmed report of malicious code, not a heuristic signal.
 
 ## Tools used
 
-`get_package`, `get_package_version`, `check_maintainer_changes`,
-`check_package_provenance`, `analyze_install_script`, `suggest_alternative`
-— all provided by the `npmscan` MCP server bundled with this plugin
-(`.mcp.json`). See
+`get_package`, `get_package_version`, `get_latest_advisories`,
+`check_maintainer_changes`, `check_package_provenance`,
+`analyze_install_script`, `suggest_alternative` — all provided by the
+`npmscan` MCP server bundled with this plugin (`.mcp.json`). See
 [references/test-prompts.md](references/test-prompts.md) for prompts to
 manually verify this skill after installing or editing it.

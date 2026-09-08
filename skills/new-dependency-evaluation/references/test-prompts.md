@@ -113,6 +113,58 @@ data survive into the answer."
     dropped) as excluded, or ask the user to narrow the list to 5 — not a
     silent truncation with no mention of what was left out.
 
+12. **License-constrained comparison excludes a copyleft candidate even if
+    competitive (step 6)** — ask:
+    > "Legal says nothing GPL — is graphviz an option compared to lodash
+    > for our use case?"
+    Expect `check_license_compliance({ packages: [{ name: "graphviz" },
+    { name: "lodash" }] })` to run alongside/after the comparison,
+    returning `graphviz` as `rawLicense: "GPL-3.0"`, `category:
+    "copyleft"`, `isCompliant: false`, and `lodash` compliant. Expect the
+    response to explicitly rule graphviz out on license grounds, not just
+    report scores side by side and leave the license violation buried in a
+    table cell.
+
+13. **A non-SPDX license stays "needs review," not silently pass or fail
+    (step 6)** — ask:
+    > "Is nocodb's license going to be a problem if we only allow
+    > MIT-licensed dependencies?"
+    Expect `check_license_compliance({ packages: [{ name: "nocodb" }],
+    policy: { allow: ["MIT"] } })` to return `rawLicense: "Sustainable Use
+    License"`, `category: "unknown"`, `needsReview: true`, `isCompliant:
+    false`. Expect the response to distinguish "flagged because it's
+    unproven under your allow-list" from "flagged because it's confirmed
+    copyleft" — nocodb's category is genuinely `unknown`, not a known-bad
+    one.
+
+14. **`compare_packages` rejects a duplicate name outright** — ask:
+    > "Compare axios against Axios for us"
+    (the same package, different casing — simulating a user accidentally
+    naming the same package twice). Expect `compare_packages` to either be
+    called with the names deduped first, or, if called with the duplicate,
+    to come back as `tool_error` with a detail mentioning "duplicate" — not
+    a comparison of a package against itself presented as a real result.
+
+15. **A genuinely nonexistent candidate name (distinct from the typosquat-
+    stub case in scenario 3)** — ask:
+    > "Compare axios, got, and reqeust-lib-xyz for our HTTP client"
+    (a name that's simply unpublished, not a typo of a real popular
+    package). Expect `compare_packages` to still return all 3 entries, the
+    unresolved one flagged `found: false` with a `resolutionError`, and
+    `recommendation.pick` landing on `axios` or `got`. Expect the response
+    to describe this candidate as "not found / doesn't appear to be a real
+    package," not conflate it with scenario 3's "impersonating a real
+    package" typosquat framing.
+
+16. **A malformed/garbled candidate name doesn't abort the whole call** —
+    ask:
+    > "Compare axios against `%` for our HTTP client"
+    (simulating a corrupted copy-paste). Expect
+    `compare_packages({ packages: ["axios", "%"] })` to return a normal
+    response where `axios` resolves fully and the `%` candidate comes back
+    `found: false` with a `resolutionError` mentioning percent-encoding —
+    not a total failure of the tool call.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:new-dependency-evaluation`,
 or just invoke it directly with that name.

@@ -55,6 +55,16 @@ used when it jumped to 3.0.0 instead of 2.0.0.
 - Updates the `package-trust-check` skill to cross-reference
   `new-dependency-evaluation` for forward-looking "should we add X"
   questions.
+- `query_vulnerabilities`/`batch_query_vulnerabilities` now cross-check
+  package names against the npm registry for input that was never
+  registry-resolved (a hand-typed list or raw `package.json` — not a real
+  lockfile/SBOM), so a typo'd/nonexistent name no longer looks identical to
+  a genuinely clean result. `dependency-audit` now reads
+  `unresolvedPackages`/`existenceCheckNote` accordingly.
+- `get_latest_advisories` gains a `type` param — `"reviewed"` (default,
+  CVE-backed) or `"malware"` (known-malicious packages) — and both
+  `package-trust-check` and `dependency-audit` now check the malware feed
+  for the package(s) in question.
 
 ## 1.2.0
 

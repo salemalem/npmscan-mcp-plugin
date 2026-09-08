@@ -90,7 +90,13 @@ than guessing at what to audit.
    result has an `enrichmentNote` (a very large audit crossed the enrichment
    cap), the vulnerabilities it names are ID-only — call
    `query_vulnerabilities` on those *specific* packages if the user needs
-   full detail on them.
+   full detail on them. For a hand-typed dependency list or raw `package.json`
+   content (names never resolved against a registry, unlike a real lockfile/
+   SBOM), also check the result's `unresolvedPackages`/`existenceCheckNote`:
+   a name that doesn't actually exist on npm shows `vulnerabilityCount: 0`
+   exactly like a genuinely clean package, and that field is what tells the
+   two apart — report an unresolved name as its own finding (typo? never
+   published?), never as "no known vulnerabilities."
 4. For every package the batch call flags, follow up with `get_package`
    (or `get_package_version` when an exact version was provided) to check
    maintainers, license, and install scripts (`preinstall`/`postinstall`).
@@ -140,8 +146,17 @@ than guessing at what to audit.
      actually committed at the attested source commit (a mismatch here is
      the stolen-npm-token publish pattern). Structural only, not a
      cryptographic re-verification.
-7. Only call `get_latest_advisories` if the user separately asks for broader
-   npm-ecosystem context — it is not part of the default flow.
+   - `get_latest_advisories({ type: "malware", affects: name })` — a cheap,
+     direct check of whether this exact package has ever been flagged in
+     GitHub's known-malicious-packages feed, independent of the CVE-backed
+     findings step 3/5 already surfaced. A hit is the single most severe
+     possible finding for that package — report it plainly, don't soften it
+     into "worth verifying" the way the two hedged ownership checks above
+     are reported.
+7. Only call `get_latest_advisories({ type: "reviewed", ... })` (the
+   default CVE-backed advisories, distinct from the `type: "malware"` check
+   in step 6) if the user separately asks for broader npm-ecosystem
+   context — it is not part of the default flow.
 8. If the user asks about license policy/compliance (or pastes an
    allow/deny list), call `check_license_compliance` with the same parsed
    package list. With no `policy` given it applies the default enterprise
@@ -225,6 +240,11 @@ on top of the same `diff_dependencies`/`simulate_dependency_upgrade` output.
   the tools returned.
 - Do not silently drop non-npm SBOM entries — say they were skipped because
   npmscan's vulnerability pipeline is npm-only.
+- Do not read a name in `unresolvedPackages` (from a hand-typed list or raw
+  `package.json` audit) as clean just because its `vulnerabilityCount` is 0 —
+  it means the name wasn't found on the npm registry at all, not that it has
+  no known vulnerabilities. This check doesn't run for a real lockfile/SBOM
+  input, since those names were already registry-resolved when generated.
 - Do not treat `possibleTyposquatOf` as proof of malice — it's a rule-based
   heuristic (name similarity + low popularity), not a verdict. Report it as
   "worth verifying," matching the tool's own hedged language.

@@ -102,6 +102,85 @@ called," but "did the right playbook steps survive into the answer."
    engage — this is the single row in the symptom table where asking is the
    right move, not the default.
 
+10. **The `suspected-typosquat` playbook (previously untested)** — ask:
+    > "I almost installed `expres` instead of `express` — what's the
+    > standard response for this?"
+    Expect `get_remediation_playbook({ id: "suspected-typosquat" })` (or
+    `{ rules: ["typosquat"] }` if chained from a live `possibleTyposquatOf`
+    finding). The response should quote the real playbook: `severity:
+    "high"`, its three steps (check maintainers/repo lineage, inspect
+    README/code size for a suspiciously thin repo, replace with the
+    intended package and add allow-lists), and cite the
+    `GHSA-c2m4-w5hm-vqjw` incident reference (crossenv, which impersonated
+    cross-env to steal environment variables) — not a generic "double-check
+    the name" answer.
+
+11. **The `child-process-in-install` playbook (previously untested)** —
+    ask:
+    > "A package's postinstall script spawns a child process —
+    > `exec('chmod +x ./agent.exe && ./agent.exe')` — right after
+    > downloading a binary. How bad is this and what do I do?"
+    Expect `get_remediation_playbook({ rules: ["child-process"] })` (or the
+    fuller rule set `analyze_install_script` would actually return for this
+    content) to surface `child-process-in-install`: `severity: "high"`,
+    steps escalating straight to "assume high risk, identify the exact
+    command," isolating/whitelisting only if it's a verified trusted build
+    step — otherwise remove/replace and report it — plus the
+    `GHSA-f7jv-2wj8-grw7` incident reference.
+
+12. **The `unexpected-network-install` playbook — the one moderate-severity
+    case (previously untested)** — ask:
+    > "A dependency's install script makes an outbound network call to a
+    > host I don't recognize, but nothing else about it looks off. What
+    > should I do?"
+    Expect `get_remediation_playbook({ rules: ["network-io"] })` to return
+    `unexpected-network-install`, `severity: "moderate"` — distinctly lower
+    than cases 10-11 — with steps to capture logs and identify the source,
+    re-run with `--network=none` to confirm it's actually required, then
+    allowlist the specific domain and verify checksums if so, plus the
+    `GHSA-fw7f-xj7r-p9v6` incident reference. Expect the response's tone to
+    reflect the lower severity, not treat every network call the same as a
+    child-process finding.
+
+13. **A maintainer added on npm with no release carrying it yet — the
+    "access changed, nothing shipped" urgency case** — ask:
+    > "A co-maintainer was just added to a package's npm maintainer list,
+    > but no new version has been published since. Is this already
+    > something to act on?"
+    Expect the model to recognize this as more urgent than a completed
+    turnover, chaining to
+    `get_remediation_playbook({ rules: ["maintainer-added-recently"] })` →
+    the `maintainer-change-flagged` playbook, `severity: "high"`: freeze to
+    the last known-good version, check repo activity for transparency,
+    require two-person review for the first release the new maintainer
+    actually publishes. The response should explicitly say the risk here
+    is that access already changed even though nothing has shipped with it
+    yet — not wait for a release before treating it as worth acting on.
+
+14. **The dormant-package negative counterpart — same pattern, correctly
+    zero findings** — ask the same question as case 13, but about a
+    package whose last release was years ago (well outside a ~180-day
+    lookback). Expect `check_maintainer_changes` to report no findings and
+    a `note` explaining the change falls outside its lookback window given
+    the package's dormancy — and the response to say plainly that no
+    incident-response action is currently indicated (while still noting
+    the maintainer list did change, for the record) rather than
+    manufacturing a playbook just to have something to show.
+
+15. **Unmatched rule and unmatched id in the same batch, exact note text**
+    — ask:
+    > "The scan flagged rule `not-a-real-rule` and I also tried playbook id
+    > `not-a-real-playbook-id` directly, plus the baseline
+    > `lifecycle-present` finding — what do these actually mean?"
+    Expect `get_remediation_playbook({ rules: ["lifecycle-present",
+    "not-a-real-rule"], id: "not-a-real-playbook-id" })` in one call, all
+    three results `matched: false`, and the response to use the tool's own
+    exact note text for each — `'No dedicated playbook for rule
+    "not-a-real-rule" — likely a baseline/informational finding, not
+    evidence of risk on its own.'` and `'No playbook found with id
+    "not-a-real-playbook-id".'` — rather than inventing generic advice for
+    the two that came back unmatched.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:incident-response`, or just
 invoke it directly with that name.
