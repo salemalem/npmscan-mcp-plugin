@@ -149,6 +149,7 @@ npmscan-mcp-plugin/
 │   └── marketplace.json   # lets this repo be added directly as a marketplace
 ├── .mcp.json               # bundles the npmscan MCP server
 ├── kimi.plugin.json        # Kimi plugin manifest (ignored by Claude Code)
+├── KIMI.md                 # Kimi test results + submission steps
 └── skills/                 # shared by both clients
     ├── dependency-audit/
     │   ├── SKILL.md
@@ -209,6 +210,8 @@ own manifest and both load the same five skills.
 - **Kimi Work**: in the plugin marketplace, click "Custom plugin" and ask
   Plugin Builder to import `https://github.com/salemalem/npmscan-mcp-plugin`.
   It appears under the **Personal** tab; click **+** to install.
+
+Test results and marketplace submission steps: [KIMI.md](KIMI.md).
 
 When editing, keep Kimi-only settings inside `kimi.plugin.json`. Don't add
 root-level `commands/`, `agents/`, or `hooks/` directories for Kimi, because
