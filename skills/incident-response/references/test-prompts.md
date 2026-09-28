@@ -5,20 +5,25 @@ before publishing a change to this skill. Each case names the exact tool
 calls and fields the response should surface — not just "did a tool get
 called," but "did the right playbook steps survive into the answer."
 
-1. **A full maintainer turnover, chained into remediation** — ask:
-   > "chalk's maintainers were fully replaced recently — what should I
-   > actually do about that?"
-   Expect `check_maintainer_changes({ name: "chalk" })` to run first, then
-   `get_remediation_playbook({ rules: [...] })` with whatever `rule` values
-   that call actually returned (e.g. `new-maintainer-published-quickly`).
-   The response should quote the matched playbook's real steps — for
+1. **A maintainer change, chained into remediation** — ask:
+   > "A package's maintainer list shows a new account added shortly before
+   > the latest release shipped — what should I actually do about that?"
+   Expect `get_remediation_playbook({ rules: ["new-maintainer-published-quickly"] })`
+   (chained from a `check_maintainer_changes` finding with that exact
+   `rule` value — a synthetic-fixture pattern, same caveat as cases 11-14
+   below: real packages age out of the tool's 180-day lookback window over
+   time, e.g. the real Sept 2025 chalk/debug "qix" compromise this pattern
+   is modeled on no longer shows any live finding on chalk today since
+   it's now well past 180 days old — so don't rely on a specific real
+   package still exhibiting this live when re-running this case). The
+   response should quote the matched playbook's real steps — for
    `maintainer-change-flagged`: freeze to the last known-good version, check
    repo activity/communication for transparency, require two-person review
    for the first re-adopted versions — not a generic "be careful" answer.
-   It should also lead with that match's `situationNote` (e.g. "None of the
-   maintainers who held access before the lookback window remain at all —
-   ... a hostile takeover") and name the `severity` ("high"), not just the
-   step list on its own.
+   It should also lead with that match's `situationNote` ("A maintainer
+   added to this package published a new version shortly afterward — the
+   exact shape of the September 2025 chalk/debug 'qix' compromise...") and
+   name the `severity` ("high"), not just the step list on its own.
 
 2. **A provenance mismatch, chained into remediation** — ask:
    > "check_package_provenance flagged install-script-added on

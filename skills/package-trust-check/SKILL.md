@@ -54,7 +54,19 @@ investigation — use the `new-dependency-evaluation` skill.
      shipped with it yet, so there's no version to warn the user off of.
    Also reports GitHub repository transfer/archival — a transfer isn't
    automatically hostile (e.g. jade → pug was a documented rename), say so
-   rather than treating every transfer as a red flag.
+   rather than treating every transfer as a red flag. If it flags a newly
+   added or fully turned-over maintainer, immediately follow up with
+   `check_maintainer_blast_radius({ maintainerUsername })` on that account
+   — it lists every other package the same account currently touches and
+   flags a tight cluster of packages published within a short window of
+   each other, the compromised-account shape behind incidents like the 2025
+   chalk/debug ("qix") compromise and the 2026 keyv/cacheable "Shai-Hulud"
+   worm. Don't stop at the one named package if the maintainer signal is
+   already concerning — a tight cluster across several packages is a
+   materially worse finding than a single-package maintainer change, and
+   this is a single-package investigation's best chance to catch that
+   before the user asks about the next affected package separately. A large
+   `totalPackagesFound` alone is not a red flag; only a tight cluster is.
 4. Call `check_package_provenance({ name, version })`. Three checks in one
    call: does the Sigstore build attestation's source repo/commit match
    `package.json`'s declared repository; is this version missing provenance
@@ -126,11 +138,20 @@ investigation — use the `new-dependency-evaluation` skill.
   `check_package_provenance` finding is — a match in this feed is itself a
   confirmed report of malicious code, not a heuristic signal.
 
+- Do not skip `check_maintainer_blast_radius` once `check_maintainer_changes`
+  flags a newly added or fully turned-over maintainer — that combination is
+  exactly when the follow-up matters most, not an optional extra step.
+- Do not treat a large `totalPackagesFound` from `check_maintainer_blast_radius`
+  as a red flag by itself — many legitimate maintainers publish hundreds of
+  packages over a career. Only a tight-cluster finding (several packages'
+  latest versions landing within a short window of each other) is the
+  actual signal.
+
 ## Tools used
 
 `get_package`, `get_package_version`, `get_latest_advisories`,
-`check_maintainer_changes`, `check_package_provenance`,
-`analyze_install_script`, `suggest_alternative` — all provided by the
-`npmscan` MCP server bundled with this plugin (`.mcp.json`). See
-[references/test-prompts.md](references/test-prompts.md) for prompts to
-manually verify this skill after installing or editing it.
+`check_maintainer_changes`, `check_maintainer_blast_radius`,
+`check_package_provenance`, `analyze_install_script`, `suggest_alternative`
+— all provided by the `npmscan` MCP server bundled with this plugin
+(`.mcp.json`). See [references/test-prompts.md](references/test-prompts.md)
+for prompts to manually verify this skill after installing or editing it.

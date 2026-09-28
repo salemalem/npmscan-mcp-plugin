@@ -52,15 +52,22 @@ survive into the final report."
    `query_vulnerabilities` only on the specific ID-only packages if the user
    asks for full detail on them.
 
-8. **A real, legitimate but nonzero-scoring install script** — paste:
+8. **A real, legitimate install script that scores baseline-only** — paste:
    > `{ "dependencies": { "cypress": "13.13.0" } }`
    and ask "Are any of these packages' install scripts doing something
    risky?"
-   `get_package` shows `postinstall: "node index.js --exec install"`, then
-   `analyze_install_script({ name: "cypress" })` returns findings
-   `lifecycle-present` (5 pts) + `network-call` (15 pts),
-   `totalScore: 20`, `riskTier: "low"`. Expect the report to name both
-   findings and frame it as an expected binary download, not alarming.
+   Verified live (re-check before reusing — cypress's install.js content
+   changes across releases; this pinned 13.13.0 result already differs
+   from calling the tool with no version at all, which resolves to
+   whatever is currently latest and picks up a `child-process` finding
+   this exact version doesn't have): `get_package` shows
+   `postinstall: "node index.js --exec install"`, then
+   `analyze_install_script({ name: "cypress", version: "13.13.0" })`
+   returns only the baseline `lifecycle-present` finding (3 pts),
+   `totalScore: 3`, `riskTier: "low"` — no content-rule hit at all at this
+   specific version. Expect the report to name the lifecycle-present
+   finding, say plainly that no content-rule fired, and not overstate a
+   baseline-only result as risky.
 
 9. **Transitive vulnerability two levels deep** — paste:
    > `{ "dependencies": { "optimist": "0.6.1" } }`
@@ -83,12 +90,21 @@ survive into the final report."
     > `{ "dependencies": { "chalk": "5.3.1" } }`
     and ask "This got flagged as high risk — any sign of a compromised
     maintainer?"
-    `check_maintainer_changes({ name: "chalk" })` returns a change entry for
-    version 5.3.1, `publishedAt: "2025-09-08T15:20:00.000Z"`,
-    `added: ["qix-"]`, finding `new-maintainer-published-quickly`,
-    `riskTier: "high"`. Expect this check to run only for the flagged
-    package (not the whole inventory) and the response to name the exact
-    version/date/maintainer.
+    Verified live (re-check before reusing — the real event this models is
+    now outside the tool's 180-day lookback window, so the live result has
+    changed since this case was first written): `check_maintainer_changes({
+    name: "chalk" })` today returns `findings: []`, `riskTier: "none"` — its
+    `history.changes` instead shows the real record, `qix` ADDED in 2016
+    (version 1.1.2, a decade outside any lookback) and REMOVED on
+    2025-09-08 (version 5.6.2, access revoked after the real Sept 2025
+    "qix" chalk/debug compromise was discovered — NOT "added" at a version
+    "5.3.1" that doesn't exist in chalk's actual history). Expect the
+    response to run this check only for the flagged package (not the whole
+    inventory), and to explicitly distinguish "chalk really was compromised
+    via a maintainer account in Sept 2025 — public record" from "the live
+    check comes back clean today specifically because that event is now
+    outside the lookback window, not because it never happened" — not a
+    fabricated version/date, and not silence on the historical fact either.
 
 12. **License policy sweep with a real copyleft violator** — paste:
     > `{ "dependencies": { "graphviz": "0.0.9", "lightningcss": "1.25.1",
@@ -282,26 +298,39 @@ survive into the final report."
 28. **`check_maintainer_blast_radius`: a second, independent real compromise
     pattern (jaredwray, Aug 2026)** — ask:
     > "Check the maintainer blast radius for the npm account jaredwray."
-    Expect a flagged tight-publish-cluster naming `cache-manager`,
-    `cacheable`, `flat-cache`, and `file-entry-cache` (published within ~42
-    seconds of each other, ~343M combined weekly downloads), `riskTier:
-    "high"` or `"critical"` — and, unlike the qix/chalk case already
-    covered, `stillCurrentMaintainerCount` staying high, since this
-    account itself was compromised rather than a maintainer being swapped
-    out. Expect the response to name this as a distinct incident, not
-    conflate it with the chalk/qix pattern.
+    Verified live (re-check before reusing — this account keeps publishing,
+    so cluster count/totals will keep moving): expect at least one flagged
+    tight-publish-cluster naming `cache-manager`, `cacheable`,
+    `flat-cache`, and `file-entry-cache` among its 8 packages (published
+    within ~42 seconds of each other) — as of this writing there are 4
+    total clusters on this account (an earlier keyv-family one, this
+    cacheable one, and two more recent ones), combining to `riskTier:
+    "critical"` overall, not just this one cluster in isolation — and,
+    unlike the qix/chalk case already covered, `stillCurrentMaintainerCount`
+    staying high on every cluster, since this account itself was
+    compromised rather than a maintainer being swapped out. Expect the
+    response to name this as a distinct incident, not conflate it with the
+    chalk/qix pattern.
 
 29. **`check_maintainer_blast_radius`: a huge legitimate footprint that
-    still contains a real cluster** — ask:
+    still contains real clusters** — ask:
     > "Is sindresorhus's npm account concerning from a blast-radius
     > perspective?"
     Expect `totalPackagesFound` in the high hundreds or more,
     `packagesReturned: 250` (the one-page cap), `resultsTruncated: true`,
     `clusterWindowHours: 72` — and critically, the response must not wave
     this off as "clean because prolific": any finding present is still
-    `tight-publish-cluster` (e.g. `parent-module`/`is-docker`/
-    `locate-path`/`find-up` published within ~18 hours of each other),
-    which is the actual signal regardless of the account's overall size.
+    `tight-publish-cluster`, which is the actual signal regardless of the
+    account's overall size. Verified live (re-check before reusing — this
+    account has accumulated MORE clusters since this case was first
+    written, so the specific total below will keep moving): 15 total
+    clusters spanning 2021-2026, combining to `riskTier: "critical"`
+    overall — including `parent-module`/`is-docker`/`locate-path`/
+    `find-up` (the cluster this case originally named as if isolated;
+    it's since been absorbed into a larger 24-package cluster from the
+    same window, not its own standalone finding anymore). Expect the
+    response to report the honest current total, not a stale isolated
+    4-package cluster.
 
 30. **License sweep: real proprietary and network-copyleft licenses** —
     paste:

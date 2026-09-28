@@ -35,8 +35,8 @@ Accept dependency name+version pairs from:
   `enrich_npm_audit({ content })` directly instead: it parses the report
   itself, resolves each finding's GHSA advisory to a CVE alias via OSV
   (npm audit JSON almost never carries a CVE id on its own), and returns the
-  same patch-now/patch-soon/scheduled/monitor ranking as step 9 below in one
-  call — this replaces steps 1, 3, and 9 for the findings it covers, though
+  same remove-now/patch-now/patch-soon/scheduled/monitor ranking as step 9
+  below in one call — this replaces steps 1, 3, and 9 for the findings it covers, though
   steps 4-8 (install scripts, maintainer/provenance checks, license
   compliance) still need the package names it flagged run through those
   tools separately, since npm audit's own JSON has no license/maintainer/
@@ -90,28 +90,44 @@ than guessing at what to audit.
    result has an `enrichmentNote` (a very large audit crossed the enrichment
    cap), the vulnerabilities it names are ID-only — call
    `query_vulnerabilities` on those *specific* packages if the user needs
-   full detail on them. For a hand-typed dependency list or raw `package.json`
+   full detail on them. Each result also carries `signals` (`deprecated`,
+   `hasInstallScripts`, `popularityTier`/`maintenanceTier`,
+   `possibleTyposquatOf`) directly — a clean `vulnerabilityCount: 0` with a
+   flagged `signals` entry is NOT clean, and `signals` is `null` (not "the
+   package is fine") for a `not-scanned` git/file/workspace entry, so don't
+   read that null as reassurance either. When `content` was a lockfile, each
+   result also carries `source` (`resolvedUrl`/`integrity` and
+   `nonRegistryHost`/`identityMismatch`): `identityMismatch: true` means the
+   resolved tarball doesn't actually match the declared package/version —
+   the vulnerability count above was computed for the DECLARED package, not
+   whatever the tarball actually is, so treat this as its own critical
+   finding, separate from and on top of any CVE result. See the tool's own
+   `warnings` array for anything flagged this way.
+   For a hand-typed dependency list or raw `package.json`
    content (names never resolved against a registry, unlike a real lockfile/
    SBOM), also check the result's `unresolvedPackages`/`existenceCheckNote`:
    a name that doesn't actually exist on npm shows `vulnerabilityCount: 0`
    exactly like a genuinely clean package, and that field is what tells the
    two apart — report an unresolved name as its own finding (typo? never
    published?), never as "no known vulnerabilities."
-4. For every package the batch call flags, follow up with `get_package`
-   (or `get_package_version` when an exact version was provided) to check
-   maintainers, license, and install scripts (`preinstall`/`postinstall`).
+4. For every package the batch call flags, use `signals` from step 3 first
+   — it already gives you `deprecated`/`maintenanceSummary`-equivalent data,
+   `hasInstallScripts`, and `possibleTyposquatOf` for the specific requested
+   version with no extra call. Only follow up with `get_package` (or
+   `get_package_version` when an exact version was provided) for what
+   `signals` does NOT cover: license, and a closer look at maintainers.
    Treat install scripts as a separate risk signal from known CVEs, not
    something to fold into the same score. If the user wants to know what a
    flagged install script actually *does* rather than just that one exists,
    follow up with `analyze_install_script` — it fetches the published
    tarball and statically scans the script and the files it references
    against npmscan's red-flags rubric, returning a `totalScore`/`riskTier`.
-   Also surface what `get_package` already computes for you:
-   `deprecated`/`maintenanceSummary` (a deprecated or abandoned dependency
-   is a real finding, not just a CVE footnote) and `possibleTyposquatOf`
-   (if set, this package's name is one typo away from a much more popular
-   one — flag it prominently as a supply-chain risk to verify, not as
-   confirmed malice).
+   Also surface `signals.deprecated` (and `maintenanceSummary`, when you
+   did call `get_package`) — a deprecated or abandoned dependency is a real
+   finding, not just a CVE footnote. If
+   `signals.possibleTyposquatOf` is set, this package's name is one typo
+   away from a much more popular one — flag it prominently as a
+   supply-chain risk to verify, not as confirmed malice.
 5. If the user wants coverage beyond the direct dependencies you were given
    (asks about "transitive"/"indirect" risk, or the inventory is small — up
    to 15 root packages), call `analyze_transitive_dependencies` instead of, or
@@ -167,13 +183,20 @@ than guessing at what to audit.
 9. Once you have the full set of flagged CVE/GHSA findings (from step 3
    and/or 5), and there is more than a couple of them, call
    `prioritize_remediation` with one `{packageName, cveId, severity,
-   currentVersion, fixedVersion}` entry per finding to get a patch-now /
-   patch-soon / scheduled / monitor tier per finding (CISA KEV status
-   overrides everything else; EPSS exploitation probability is the primary
-   ranking signal otherwise; severity is the fallback). Lead the summary
-   report with this ranking instead of a flat severity list — it answers
-   "what do I fix first," which is usually what the user actually needs from
-   an audit with more than a few findings.
+   currentVersion, fixedVersion, advisoryId, findingType}` entry per finding
+   to get a remove-now / patch-now / patch-soon / scheduled / monitor tier
+   per finding (a confirmed-malware finding forces `remove-now` ahead of
+   everything else — pass the advisory's own `id` through as `advisoryId`,
+   which auto-detects a `MAL-*` id as malware, and set `findingType:
+   "malware"` explicitly whenever you can otherwise tell it's a confirmed
+   malicious package rather than an ordinary vulnerability; CISA KEV status
+   overrides everything else after that; EPSS exploitation probability is
+   the primary ranking signal otherwise; severity is the fallback). Lead the
+   summary report with this ranking instead of a flat severity list — it
+   answers "what do I fix first," which is usually what the user actually
+   needs from an audit with more than a few findings. Treat any `remove-now`
+   finding as the headline of the report, ahead of the ranked table, not
+   just its top row.
 10. For any package that ends up flagged as deprecated, vulnerable at its
     latest version, abandoned/stale, or a confirmed typosquat, offer (don't
     force) a replacement: `suggest_alternative` combines the maintainer's own
@@ -202,6 +225,21 @@ replaces the batch-query flow above, it doesn't precede it.
   bump that quietly adds a postinstall script is the shape of a
   compromised-maintainer supply-chain attack, and is the single highest-
   signal field this tool returns.
+- Check `sourceIntegrityChanged` on every changed package too, right
+  alongside `installScriptIntroduced` — it catches a DIFFERENT attack shape:
+  a lockfile entry whose resolved tarball URL or integrity hash changed
+  while the version string stayed IDENTICAL (a compromised registry mirror,
+  or a hand-edited lockfile), which a version-only read of the diff would
+  report as "no change." See `resolvedUrl`/`integrity` on the entry for
+  what actually changed.
+- Check `projectLifecycleChanges` (the SCANNED PROJECT's own root
+  preinstall/install/postinstall/prepare scripts) and `overridesChanges`
+  (`overrides`/`resolutions`/`pnpm.overrides`) even when the dependency list
+  itself shows nothing — a PR that only adds a root postinstall or quietly
+  removes a security override changes neither `added`/`removed`/`changed`,
+  and is exactly the kind of change a diff review exists to catch. Both are
+  counted in `flaggedCount`; don't report "no changes" on a diff that only
+  flagged one of these.
 - Report `vulnerabilityDelta` per changed package (introduced / fixed /
   still-vulnerable / still-clean), not just a final isVulnerable flag — the
   direction of the change is the point of a diff.
@@ -264,6 +302,16 @@ on top of the same `diff_dependencies`/`simulate_dependency_upgrade` output.
   distinguishes maintainer-named replacements from category-matched guesses
   and reports `nonPackageAlternatives` when no package is the right answer;
   don't override that with your own guess.
+- Do not read `source.identityMismatch: true` as a minor detail folded into
+  the vulnerability count — it means the vulnerabilityCount/signals reported
+  for that package were computed for the DECLARED name/version, not
+  whatever the resolved tarball actually is. Report it as its own headline
+  finding, not a footnote.
+- Do not skip `projectLifecycleChanges`/`overridesChanges` when reporting a
+  `diff_dependencies` result just because the dependency list itself shows
+  no changes — a PR that only touches the project's own root scripts or an
+  override is a real, flaggable change with nothing in `added`/`removed`/
+  `changed` to hint at it.
 - Do not attempt to install, upgrade, or publish packages yourself; this
   skill only reads data through NPMScan's read-only MCP tools.
 

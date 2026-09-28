@@ -53,13 +53,21 @@ verdict.
    rule on the raw field rather than deferring to that tool's blended
    breaking-change/security tier.
 
-5. **WARN — a real major bump, otherwise clean.** Ask to gate a bump from
-   lodash 3.10.1 to 4.17.21. `simulate_dependency_upgrade` returns
-   `semverBump: "major"`, `isBreakingBySemver: true`,
-   `riskTier: "breaking-change-likely"`, with a clean OSV check on both
-   sides. Expect `GATE: WARN` (not FAIL — nothing here is a security
-   finding) with the reason naming the major-version jump, not a vague
-   "risky."
+5. **WARN — a real major bump that's also pre-existing still-vulnerable
+   (not introduced by this bump).** Ask to gate a bump from lodash 3.10.1
+   to 4.17.21. `simulate_dependency_upgrade` returns `semverBump: "major"`,
+   `isBreakingBySemver: true`, `riskTier: "breaking-change-likely"`, AND
+   `currentIsVulnerable: true`/`targetIsVulnerable: true`/
+   `vulnerabilityDelta: "still-vulnerable"` (as of this writing, both sides
+   carry a real HIGH-severity finding — GHSA-r5fr-rjxr-66jc, code injection
+   via `_.template`; re-verify live, since OSV findings for a given version
+   can appear or disappear over time and this specific CVE was retroactively
+   published against old lodash releases well after 4.17.21 first shipped).
+   Expect `GATE: WARN`, not `FAIL` — the FAIL rule for an introduced
+   CRITICAL/HIGH finding only fires on `vulnerabilityDelta: "introduced"`,
+   and this is `"still-vulnerable"` (pre-existing on both sides, not
+   introduced by this bump) — with the reason naming BOTH the major-version
+   jump and the still-vulnerable finding, not just one of them.
 
 6. **WARN — pre-1.0 minor bump flagged breaking by semver convention.**
    Ask to gate chalk 0.4.0 → 0.5.0. Expect `semverBump: "minor"`,

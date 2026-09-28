@@ -6,15 +6,23 @@ package/version and the exact fields the response should surface — not just
 "did a tool get called," but "did the right version and finding survive
 into the answer."
 
-1. **The chalk/debug "qix" compromise, pinned to the exact version** — ask:
-   > "Is chalk 5.3.1 safe? I heard there was a supply-chain incident."
-   `check_maintainer_changes({ name: "chalk" })` should return a change
-   entry for **version 5.3.1**, `publishedAt: "2025-09-08T15:20:00.000Z"`,
-   `added: ["qix-"]`. Expect the response to name that exact version and
-   date, quote the `new-maintainer-published-quickly` finding (a maintainer
-   added shortly before this publish, on a package with years of prior
-   stable history), and report `riskTier: "high"` — not a vague "chalk had
-   some issue once."
+1. **The chalk/debug "qix" compromise — now outside the lookback window,
+   correctly distinguished from "never happened"** — ask:
+   > "Is chalk safe? I heard there was a supply-chain incident."
+   Verified live (re-check before reusing, since the tool's 180-day
+   lookback window moves forward every day this incident recedes further
+   into the past): `check_maintainer_changes({ name: "chalk" })` now
+   returns `findings: []`, `riskTier: "none"`, with `history.changes`
+   showing the real record — `qix` was added as a maintainer in 2016
+   (version 1.1.2) and REMOVED on 2025-09-08 (version 5.6.2, access
+   revoked after the compromise was discovered) — but that removal is now
+   well outside the 180-day window, so nothing in it is flagged today.
+   Expect the response to explicitly distinguish "yes, chalk really was
+   compromised via a maintainer account in Sept 2025 — this is public
+   record" from "the tool's live check comes back clean today specifically
+   because that event is now outside its lookback window, not because it
+   never happened" — the same shape as case 2 below, not a vague "chalk had
+   some issue once" or a false claim that nothing was ever flagged.
 
 2. **event-stream, asked about the actual malicious 2018 version** — ask:
    > "Was event-stream 3.3.6 compromised? Is it still a risk today?"
@@ -56,23 +64,25 @@ into the answer."
    > "Does @npmcli/arborist look legit? Check its publish provenance."
    `check_package_provenance({ name: "@npmcli/arborist" })` returns
    `provenance.hasProvenance: false` while
-   `peers: { orgKind: "scope", orgIdentifier: "@npmcli", peersChecked: 12,
-   peersWithProvenance: 10, peerProvenanceRate: 0.83 }`, finding
-   `peer-provenance-anomaly` (15 points, `riskTier: "low"`). Expect the
-   response to cite the exact numbers (10 of 12 / 83% of @npmcli-scoped
-   siblings publish with provenance, this one doesn't) rather than a vague
-   "provenance is missing" — missing provenance alone isn't the finding,
-   the peer-norm mismatch is.
+   `peers: { orgKind: "scope", orgIdentifier: "@npmcli", peersChecked: 8,
+   peersWithProvenance: 8, peerProvenanceRate: 1 }`, finding
+   `no-provenance-org-norm` (15 points, `riskTier: "moderate"`). Verified
+   live — re-check these numbers before reusing them, since peer provenance
+   adoption within a scope shifts as more packages publish with
+   `--provenance` over time. Expect the response to cite the exact numbers
+   (8 of 8 / 100% of @npmcli-scoped siblings publish with provenance, this
+   one doesn't) rather than a vague "provenance is missing" — missing
+   provenance alone isn't the finding, the peer-norm mismatch is.
 
 7. **lodash: missing provenance with no anomaly** — ask:
    > "lodash shows no npm provenance badge. Is that suspicious?"
    `check_package_provenance({ name: "lodash" })` returns
    `provenance.hasProvenance: false`,
-   `peers: { orgKind: "maintainer", peersChecked: 4, peersWithProvenance: 0,
-   peerProvenanceRate: 0 }`, `findings: []`, `riskTier: "none"`. Expect the
-   response to explain lodash predates provenance and so do its
-   maintainer's other packages — no anomaly — rather than flagging the
-   missing badge on its own.
+   `peers: { orgKind: "maintainer", orgIdentifier: "jdalton", peersChecked:
+   8, peersWithProvenance: 0, peerProvenanceRate: 0 }`, `findings: []`,
+   `riskTier: "none"`. Verified live. Expect the response to explain lodash
+   predates provenance and so do its maintainer's other packages — no
+   anomaly — rather than flagging the missing badge on its own.
 
 8. **semver 7.6.3: a clean, well-formed provenance result** — ask:
    > "Check semver 7.6.3's publish provenance."
@@ -86,13 +96,17 @@ into the answer."
 9. **cypress: a real, legitimate but nonzero-scoring postinstall** — ask:
    > "Is cypress's install process doing anything risky?"
    `get_package({ name: "cypress" })` shows
-   `postinstall: "node index.js --exec install"`, then
+   `postinstall: "node dist/index.js --exec install"`, then
    `analyze_install_script({ name: "cypress" })` returns findings
-   `lifecycle-present` (5 pts) + `network-call` (15 pts),
-   `totalScore: 20`, `riskTier: "low"`. Expect the response to name both
-   findings (it downloads a platform binary from a CDN during install) and
-   explicitly say nonzero here reflects a real, expected download — not
-   malicious behavior — matching the tool's own framing.
+   `lifecycle-present` (3 pts) + `child-process` (4 pts, from a
+   `require('child_process')` in the scanned `dist/index.js`),
+   `totalScore: 7`, `riskTier: "moderate"`. Verified live — the exact
+   postinstall command/score can shift release to release; re-check before
+   treating these numbers as fixed. Expect the response to name the
+   finding (cypress spawns a child process during install as part of
+   installing its platform binary) and explicitly say this reflects a
+   real, expected step — not malicious behavior — matching the tool's own
+   framing.
 
 10. **node-sass: deprecated, with a named replacement offered** — ask:
     > "Can I still trust node-sass?"

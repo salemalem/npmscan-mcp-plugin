@@ -59,10 +59,14 @@ they want to know what to actually *do* about a finding, hand off to
    any entry with `vulnerabilityDelta` of `"introduced"` or
    `"still-vulnerable"` (from either tool), taking `id`/severity from its
    `vulnerabilities[]` array (diff) or `targetVulnerabilities[]` (simulate).
-   Deduplicate identical `{packageName, cveId}` pairs, then call
-   `prioritize_remediation({ findings })` once with all of them — even for
-   a single finding, since KEV status isn't visible from the raw severity
-   string alone.
+   Pass each finding's `id` through as `advisoryId` (a `MAL-*` id is
+   auto-detected as malware and forces `tier: "remove-now"` even if you
+   don't separately know it's malware) and set `findingType: "malware"`
+   explicitly whenever the finding is otherwise identifiable as a confirmed
+   malicious package, not just a vulnerability. Deduplicate identical
+   `{packageName, cveId}` pairs, then call `prioritize_remediation({
+   findings })` once with all of them — even for a single finding, since KEV
+   status isn't visible from the raw severity string alone.
 3. Apply the [Gate policy](#gate-policy) below to every package checked,
    deterministically. The overall verdict is the worst single-package
    verdict (FAIL beats WARN beats PASS) — one failing package fails the
@@ -78,12 +82,36 @@ triggers is that package's verdict.
 
 ### FAIL — block the merge
 
+- Any finding — introduced or pre-existing — that `prioritize_remediation`
+  ranks `tier: "remove-now"`, or that carries `findingType: "malware"`, or
+  whose `advisoryId`/finding `id` matches `MAL-*`. This is a confirmed
+  malicious package, not a vulnerability to schedule — it outranks every
+  other rule here, including KEV/EPSS, and applies regardless of whether
+  the finding is `"introduced"` or pre-existing `"still-vulnerable"`: a
+  malware package already present before this PR is exactly as disqualifying
+  as one this PR adds. Check this first, before the severity-based rule
+  below, since a malware advisory's own OSV `severity` field can be missing
+  or non-CRITICAL even though `tier` correctly comes back `"remove-now"`.
 - `installScriptIntroduced === true` on any changed/upgraded package
   (from either tool). This is the same highest-signal field
   `dependency-audit` and `diff_dependencies`'s own description call out —
   a routine-looking bump quietly adding a `postinstall` is the shape of a
   compromised-maintainer attack, and a gate should never let that through
   as a warning.
+- `sourceIntegrityChanged === true` on any changed/upgraded package (diff
+  only — see `resolvedUrl`/`integrity` on that entry for what changed). This
+  means the resolved tarball URL or integrity hash changed while the
+  version string stayed IDENTICAL — a same-version tarball swap (a
+  compromised registry mirror, or a hand-edited/tampered lockfile) that a
+  version-only read of the diff would report as "no change." Treat this at
+  least as seriously as `installScriptIntroduced`.
+- `projectLifecycleChanges.introduced` non-empty (diff only) — a lifecycle
+  key (`preinstall`/`install`/`postinstall`/`prepare`) newly added to the
+  SCANNED PROJECT's own root `package.json`, not a dependency's. This runs
+  the moment anyone runs `npm install` on the project itself and is
+  invisible to every per-package rule above, since it isn't a package being
+  added/changed at all — treat a new root lifecycle script exactly like
+  `installScriptIntroduced` on a dependency.
 - Any `vulnerabilityDelta: "introduced"` finding whose `highestSeverity` /
   vulnerability severity is `CRITICAL` or `HIGH` — **regardless of what
   tier `prioritize_remediation` assigns it.** A PR that actively introduces
@@ -123,6 +151,18 @@ triggers is that package's verdict.
 - `changeType === "downgrade"` with no vulnerability reintroduced — still
   worth a reviewer's eyes; a PR that quietly lowers a dependency version
   for no stated reason is unusual enough to flag.
+- `projectLifecycleChanges.changed` non-empty (diff only) — an EXISTING root
+  lifecycle script's command was modified (not newly added — see the FAIL
+  rule above for that case). Could be a legitimate build-tooling update, but
+  the project's own install-time command changing is always worth a
+  reviewer's eyes.
+- `overridesChanges` non-empty (diff only, any of introduced/removed/
+  changed) — `overrides`/`resolutions`/`pnpm.overrides` force a specific
+  version onto a transitive dependency, often to pin past a known
+  vulnerability; a PR that quietly weakens, removes, or changes one can be
+  an attacker forcing a compromised version back in just as easily as
+  routine cleanup. Name exactly which package's override changed and how in
+  the reason — don't just say "overrides changed."
 
 ### PASS
 
@@ -156,8 +196,9 @@ Checked N package(s), M flagged.
   the response — never let the table show a FAIL-tier row while the top
   line says PASS.
 - Every row's "Reason" cites the specific field that triggered it (exact
-  CVE/GHSA id and severity, or "installScriptIntroduced", or "major semver
-  bump," etc.) — never a bare "flagged," and never fold multiple reasons
+  CVE/GHSA id and severity, `"installScriptIntroduced"`,
+  `"sourceIntegrityChanged"`, `"overridesChanges"`, "major semver bump,"
+  etc.) — never a bare "flagged," and never fold multiple reasons
   for the same package into a vague summary when the row has more than
   one; list them.
 - Keep the table to the packages actually checked — don't restate
@@ -166,6 +207,14 @@ Checked N package(s), M flagged.
 - A package the tool couldn't resolve still gets its own row with verdict
   WARN and the resolution note as the reason — never drop it from the
   table silently.
+- `projectLifecycleChanges`/`overridesChanges` describe the PROJECT itself
+  (its root `package.json`), not any one dependency package — they don't
+  fit the per-package table naturally. Give each one its own row using
+  `(project root)` as the "Package" value and the changed key/override name
+  in "Before → After" (e.g. `postinstall: (none) → curl ... | sh`, or
+  `overrides.lodash: 4.17.21 → (removed)`), same Verdict/Reason columns as
+  every other row — never omit them just because they don't name a
+  dependency.
 
 ## Do not
 
@@ -178,7 +227,11 @@ Checked N package(s), M flagged.
   rule above; that tool's tier is a fix-priority ranking across a whole
   backlog, not a merge-admission signal on its own.
 - Do not block a PR for a `still-vulnerable` (pre-existing) finding the PR
-  didn't introduce — WARN it, don't FAIL it.
+  didn't introduce — WARN it, don't FAIL it. The one exception is
+  `tier: "remove-now"`/`findingType: "malware"`: FAIL that regardless of
+  whether it's introduced or pre-existing, per the Gate policy above — a
+  malware package doesn't become acceptable just because this PR isn't the
+  one that added it.
 - Do not run both `diff_dependencies` and `simulate_dependency_upgrade` on
   the same package in the same request "just in case" — route per the
   input-shape table once.

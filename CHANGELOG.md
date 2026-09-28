@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased
+
+Syncs the skills with the npmscan server's Sep 24–25 skill refresh
+(`npmscan/mcp/skills`), keeping this plugin's own Claude Code–specific
+edits (batch `simulate_dependency_upgrade`, `unresolvedPackages`, the
+malware-feed check in package-trust-check).
+
+- `ci-pr-gate`: FAILs any `tier: "remove-now"` / `findingType: "malware"` /
+  `MAL-*` finding whether it was introduced or already there; passes
+  `advisoryId` through to `prioritize_remediation`; gates
+  `projectLifecycleChanges`, `overridesChanges`, and source-integrity
+  changes as `(project root)` rows.
+- `dependency-audit`: reads `signals` from `batch_query_vulnerabilities`
+  before calling `get_package`; treats `source.identityMismatch` from a
+  lockfile as a headline finding; reports root-script and override changes
+  from `diff_dependencies`.
+- `package-trust-check`: follows up with `check_maintainer_blast_radius`
+  when `check_maintainer_changes` flags a new or fully turned-over
+  maintainer.
+- Refreshed test prompts with the server's re-verified live expectations.
+
 ## 3.0.0
 
 Jumps straight to 3.0.0 (skipping 2.x) to stay clear of a separate 2.0.0
