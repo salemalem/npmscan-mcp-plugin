@@ -148,7 +148,8 @@ npmscan-mcp-plugin/
 │   ├── plugin.json        # plugin manifest
 │   └── marketplace.json   # lets this repo be added directly as a marketplace
 ├── .mcp.json               # bundles the npmscan MCP server
-└── skills/
+├── kimi.plugin.json        # Kimi plugin manifest (ignored by Claude Code)
+└── skills/                 # shared by both clients
     ├── dependency-audit/
     │   ├── SKILL.md
     │   └── references/test-prompts.md
@@ -194,6 +195,24 @@ prompts in each skill's `references/test-prompts.md`.
 
 See Anthropic's [plugin docs](https://code.claude.com/docs/en/plugins) for
 the full development and distribution guide.
+
+## Using it with Kimi
+
+This same repo is also a [Kimi plugin](https://moonshotai.github.io/kimi-code/en/customization/plugins.html):
+[`kimi.plugin.json`](kimi.plugin.json) declares the same MCP server and
+points at the same `skills/` directory. Claude Code ignores that file, and
+Kimi prefers it over `.claude-plugin/plugin.json`, so each client reads its
+own manifest and both load the same five skills.
+
+- **Kimi Code CLI**: `/plugins install https://github.com/salemalem/npmscan-mcp-plugin`
+  (or `/plugins install ./` from a local checkout).
+- **Kimi Work**: in the plugin marketplace, click "Custom plugin" and ask
+  Plugin Builder to import `https://github.com/salemalem/npmscan-mcp-plugin`.
+  It appears under the **Personal** tab; click **+** to install.
+
+When editing, keep Kimi-only settings inside `kimi.plugin.json`. Don't add
+root-level `commands/`, `agents/`, or `hooks/` directories for Kimi, because
+Claude Code auto-loads those too.
 
 ## Also available for other AI clients
 

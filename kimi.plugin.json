@@ -1,0 +1,50 @@
+{
+  "$schema": "https://kimi.com/schemas/kimi.plugin.schema.json",
+  "name": "npmscan",
+  "version": "3.0.0",
+  "description": "Detect malicious, vulnerable, or typosquatted npm packages from a conversation. Search the npm registry, or compare 2-5 candidates side-by-side before adding a new dependency; inspect maintainers, install scripts, and Sigstore publish provenance before installing; audit a whole package.json/lockfile/SBOM/GitHub repo — including transitive dependencies, license compliance, and before/after PR diffs or npm audit output — against OSV.dev / GitHub Security Advisories / NIST NVD (with CISA KEV and FIRST EPSS enrichment); then get a prioritized remediation ranking, concrete incident-response playbooks, a CI-ready PASS/WARN/FAIL merge gate, safer-alternative suggestions, and a generated CycloneDX/SPDX SBOM — via npmscan.com's free, read-only MCP server.",
+  "keywords": [
+    "npm",
+    "security",
+    "supply-chain",
+    "vulnerability",
+    "dependency-audit",
+    "malware",
+    "typosquatting",
+    "osv",
+    "github-advisories",
+    "cve",
+    "nvd",
+    "provenance",
+    "sigstore",
+    "license-compliance",
+    "sbom",
+    "maintainer-takeover",
+    "ci-cd",
+    "incident-response",
+    "remediation"
+  ],
+  "author": "BlockHacks.io",
+  "homepage": "https://npmscan.com/docs/mcp",
+  "license": "MIT",
+  "skills": "./skills/",
+  "skillInstructions": "All npmscan tools are read-only lookups against npmscan.com's public MCP server (npm registry, OSV.dev, GitHub Security Advisories, NIST NVD with CISA KEV and FIRST EPSS enrichment). Include the npmscanUrl links the tools return so the user can see the full write-up, and never install, uninstall, or modify packages yourself — report findings and let the user act.",
+  "interface": {
+    "displayName": "NPMScan",
+    "shortDescription": "Detect malicious & vulnerable npm packages",
+    "longDescription": "Check npm packages for known vulnerabilities, malware, typosquats, maintainer takeovers, and risky install scripts before you install, upgrade, or ship them. Backed by npmscan.com's free, read-only MCP server (23 tools, no API key): npm registry search and side-by-side comparison, OSV.dev / GitHub Security Advisories / NIST NVD lookups enriched with CISA KEV and FIRST EPSS, Sigstore provenance and maintainer-history checks, whole-repo and transitive-dependency audits, license compliance, PR dependency diffs, npm audit enrichment, remediation ranking, and CycloneDX/SPDX SBOM generation. Bundles five skills: dependency-audit (audit a package.json, lockfile, SBOM, or GitHub repo), package-trust-check (is one package safe or compromised), new-dependency-evaluation (pick between candidate packages), incident-response (concrete playbooks for a flagged package), and ci-pr-gate (a deterministic PASS/WARN/FAIL merge verdict). Official page: https://npmscan.com",
+    "developerName": "BlockHacks.io",
+    "websiteURL": "https://npmscan.com",
+    "category": "DEVELOPER",
+    "mcpOverrides": {
+      "npmscan": {
+        "displayName": "NPMScan"
+      }
+    }
+  },
+  "mcpServers": {
+    "npmscan": {
+      "url": "https://npmscan.com/api/mcp"
+    }
+  }
+}

@@ -70,6 +70,36 @@ https://npmscan.com/privacy
 shyngys@blockhacks.io
 ```
 
+## Kimi official plugin marketplace
+
+Manifest: [`kimi.plugin.json`](kimi.plugin.json) at the repo root. It shares
+`skills/` with the Claude Code plugin; Claude Code ignores the file, and
+Kimi prefers it over `.claude-plugin/plugin.json`. Keep its `version` in
+sync with `.claude-plugin/plugin.json` (same plugin content). Schema docs:
+[Kimi Code plugins](https://moonshotai.github.io/kimi-code/en/customization/plugins.html).
+
+Don't add root `commands/`, `agents/`, or `hooks/` dirs for Kimi — Claude
+Code auto-loads those. Kimi-only config goes inside `kimi.plugin.json`.
+
+Steps (per [kimi.ai/help/plugins-and-skills/publish](https://www.kimi.ai/help/plugins-and-skills/publish)):
+
+1. Push to GitHub first — Kimi imports from the repo URL.
+2. Kimi Work → plugin marketplace → "Custom plugin" → ask Plugin Builder to
+   import `https://github.com/salemalem/npmscan-mcp-plugin`. When it asks for
+   an icon, use `https://npmscan.com/npmscan.icon.png` (512x512).
+   Check that it used `kimi.plugin.json` rather than treating
+   `.claude-plugin/marketplace.json` as a marketplace index, and that all 5
+   skills + 23 tools show up.
+3. Personal tab → **+** to install → run the 14 example prompts above.
+4. Plugin details page → ✉️ (top right) → "Apply for official marketplace
+   publication" → email:
+   ```
+   shyngys@blockhacks.io
+   ```
+
+No published acceptance criteria — the Kimi review team emails if they need
+more.
+
 ## MCP Registry submission (registry.modelcontextprotocol.io)
 
 `server.json` lives in the **main npmscan repo**, at

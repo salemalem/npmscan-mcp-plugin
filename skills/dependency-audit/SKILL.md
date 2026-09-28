@@ -83,7 +83,7 @@ than guessing at what to audit.
    every resolved package and emit a warning about that.
 3. Call `batch_query_vulnerabilities` once with the parsed/raw input. The tool
    now chunks large inventories internally — do not re-chunk the request in
-   the skill layer unless Claude's own request-size limit forces it. Each
+   the skill layer unless the client's own request-size limit forces it. Each
    finding already includes severity, a summary, CVE aliases, and the fixed
    version — do not call `query_vulnerabilities` again per flagged package
    just to re-fetch detail you already have. The only exception: if the

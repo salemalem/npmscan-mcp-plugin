@@ -20,6 +20,11 @@ malware-feed check in package-trust-check).
   when `check_maintainer_changes` flags a new or fully turned-over
   maintainer.
 - Refreshed test prompts with the server's re-verified live expectations.
+- Added `kimi.plugin.json` so the same repo installs as a Kimi plugin
+  (Kimi Code CLI / Kimi Work) with the same MCP server and skills. The
+  Claude Code manifests are unchanged.
+- `dependency-audit`: "Claude's own request-size limit" is now "the
+  client's own request-size limit", since the skill is shared across clients.
 
 ## 3.0.0
 
