@@ -55,6 +55,23 @@ kimi          # then: /plugins install https://github.com/salemalem/npmscan-mcp-
 The official marketplace submission happens from **Kimi Work** (desktop
 app), not the CLI.
 
+### Status (2026-09-28)
+
+Imported into Kimi Work's personal market and iterated to **v3.0.2**:
+
+| Item | Result |
+|---|---|
+| Import via Plugin Builder | Registered in the personal market from this repo's `kimi.plugin.json` (5 skills + npmscan MCP, http) |
+| Icon | `icon.png` — dark rounded tile from the site's dark-mode logo (`/npmscan.icon.darkmode.png`) with a subtle red glow; the raw `npmscan.icon.png` is 1.4 MB and over the 256 KB bundle limit, so the manifest keeps the remote `iconUrl` alongside |
+| Localization | `locales/zh-CN.json` — full Simplified-Chinese translation of every localizable key (platform requires zh-CN + en-US coverage) |
+| Branding | `brandColor: #ef4444` (npmscan.com's primary action red), `hostKind: hosted` |
+| Version | 3.0.2 in both `kimi.plugin.json` and `.claude-plugin/plugin.json` |
+| Validation | 0 errors, 0 warnings; registry read-back verified after each registration |
+| Changes pushed | `f634955` on `main` |
+
+Remaining before publication: click **Update** on the Personal tab (syncs
+the installed copy), then apply via the ✉️ form — step 4 below.
+
 ### 1. Install Kimi Work
 
 Download from <https://www.kimi.ai/products/kimi-work> (or kimi.ai →
