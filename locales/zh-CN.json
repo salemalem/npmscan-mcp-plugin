@@ -1,0 +1,39 @@
+{
+  "displayName": "NPMScan",
+  "shortDescription": "检测恶意和存在漏洞的 npm 包",
+  "longDescription": "在安装、升级或发布前，检查 npm 包是否存在已知漏洞、恶意代码、仿冒（typosquat）、维护者劫持和高风险的安装脚本。基于 npmscan.com 免费、只读的 MCP 服务器（23 个工具，无需 API key）：支持 npm 注册表搜索与并排对比；查询 OSV.dev、GitHub Security Advisories、NIST NVD（含 CISA KEV 与 FIRST EPSS 增强数据）；Sigstore 发布溯源与维护者历史检查；全仓库与传递依赖审计、许可证合规、PR 依赖差异对比、npm audit 结果增强、修复优先级排序，以及 CycloneDX/SPDX SBOM 生成。内置五个技能：dependency-audit（审计 package.json、lockfile、SBOM 或 GitHub 仓库）、package-trust-check（检查单个包是否安全或已被入侵）、new-dependency-evaluation（在候选包之间做选择）、incident-response（针对被标记包的具体应急手册）、ci-pr-gate（确定性的 PASS/WARN/FAIL 合并结论）。官方页面：https://npmscan.com",
+  "developerName": "BlockHacks.io",
+  "tryPrompts": [
+    "检查一下 lodash 这个 npm 包安装是否安全",
+    "审计我项目里 package.json 的依赖有没有漏洞",
+    "新增依赖前帮我对比 axios 和 node-fetch 哪个更安全"
+  ],
+  "mcpOverrides": {
+    "npmscan": {
+      "displayName": "NPMScan",
+      "description": "只读的 npm 供应链安全查询：注册表搜索；对接 OSV.dev / GitHub Security Advisories / NIST NVD 的漏洞与恶意软件检查；溯源与维护者检查；审计与 SBOM 生成。"
+    }
+  },
+  "skillOverrides": {
+    "dependency-audit": {
+      "displayName": "依赖审计",
+      "description": "在安装、升级或发布前，审计项目的 npm 依赖是否存在已知漏洞和高风险的安装脚本。"
+    },
+    "package-trust-check": {
+      "displayName": "包信任检查",
+      "description": "在安装前检查某个 npm 包是否安全：是否被入侵、是否为仿冒包，或出现维护者劫持信号。"
+    },
+    "new-dependency-evaluation": {
+      "displayName": "新依赖评估",
+      "description": "并排对比 2-5 个候选 npm 包，为新增依赖推荐最安全的选择。"
+    },
+    "incident-response": {
+      "displayName": "事件响应",
+      "description": "针对被标记或已失陷的 npm 包，获取具体的应急响应手册。"
+    },
+    "ci-pr-gate": {
+      "displayName": "CI / PR 合并门禁",
+      "description": "为 PR 或 CI 流水线中的依赖变更生成确定性的 PASS/WARN/FAIL 合并结论。"
+    }
+  }
+}
