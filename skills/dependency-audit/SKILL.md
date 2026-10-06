@@ -66,6 +66,12 @@ Accept dependency name+version pairs from:
   `deepScanNote`) and `suggest_alternative` the same way you would from the
   pasted-content flow.
 
+A non-npm list (a Python `requirements.txt`, a `Cargo.toml`, ...) can't go
+through this flow — every audit tool here is npm-only. Say so, then check
+each `name==version` with `query_vulnerabilities({ name, version,
+ecosystem })` (`"PyPI"`, `"crates.io"`, ...), and label the result as a
+per-package lookup, not a full audit.
+
 If the user instead pastes **two** snapshots and asks what changed (a PR,
 before/after, "did this upgrade introduce anything") — see
 [Comparing two snapshots](#comparing-two-snapshots-pr-review) below instead

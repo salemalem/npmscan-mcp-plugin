@@ -172,6 +172,12 @@ logic pick the right case and did the real data survive into the answer."
     three now report `installScriptRisk.riskTier: "none"`. Expect the
     comparison not to cite install scripts against uuid or cuid2.
 
+18. **A question in Russian** — ask:
+    > "Какую библиотеку выбрать для генерации уникальных ID в Node.js?"
+    Expect the skill to trigger, `search_packages` to be called with English
+    terms (e.g. "unique id"), the answer to come back in Russian, and no
+    package names that the tools didn't return.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:new-dependency-evaluation`, or just
 invoke it directly with that name.

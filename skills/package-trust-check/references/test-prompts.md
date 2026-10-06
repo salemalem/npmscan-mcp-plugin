@@ -177,6 +177,20 @@ right version and finding survive into the answer."
     from npm" verdict naming the advisory — not "that version doesn't
     exist," and not a hedged "worth verifying."
 
+16. **A deprecated package and what to use instead** — ask:
+    > "Is request safe to use, and what should I replace it with?"
+    Expect: request reported as deprecated; `check_package_provenance` with
+    no "peers have provenance" finding (2.88.2 was published in 2020,
+    before npm provenance existed); `suggest_alternative` offering real
+    HTTP clients (got, undici, ky, axios, node-fetch) — not niche matches
+    like gaxios.
+
+17. **A factual question with a false premise — no investigation** — ask:
+    > "What's the latest version of lodash? I heard it has a critical RCE."
+    Expect no trust-check sweep: `get_package` (and at most
+    `query_vulnerabilities`) answers the version, and the premise is
+    corrected with the real advisories and severities rather than repeated.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:package-trust-check`, or just
 invoke it directly with that name.
