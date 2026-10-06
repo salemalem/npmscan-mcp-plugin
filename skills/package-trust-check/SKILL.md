@@ -29,19 +29,24 @@ investigation — use the `new-dependency-evaluation` skill.
    `possibleTyposquatOf`, `isLatestVersionVulnerable`/`highestSeverity`,
    `downloadTrend`, and days-since-last-publish. This alone answers a good
    chunk of "should I trust this" and grounds the deeper checks that follow —
-   don't skip straight to the maintainer/provenance tools without it.
-2. Call `get_latest_advisories({ type: "malware", affects: name })` — a
-   cheap, direct check of whether this exact package has ever been flagged
-   in GitHub's known-malicious-packages feed (e.g. OpenSSF's
-   malicious-packages list), independent of the CVE-backed advisories
-   `query_vulnerabilities`/`batch_query_vulnerabilities` already cover. A
-   hit here is the single most severe possible finding — almost none of
-   these advisories carry a CVE or a meaningful CWE beyond "embedded
-   malicious code," so don't expect one, and don't skip reporting a hit
-   just because it lacks the fields a CVE-backed finding would have. An
-   empty result means nothing was found in this feed specifically — it is
-   not, on its own, a full clean bill of health; still run the rest of the
-   checks below.
+   don't skip straight to the maintainer/provenance tools without it. If
+   `get_package_version` comes back with `versionExists: false`, that version
+   is no longer on npm but OSV still has advisories for it — usually a
+   release npm pulled for being malicious (ua-parser-js 0.7.29, debug
+   4.4.2). Report its `vulnerabilities` as real; it is not a "not found."
+2. Check for malware. Every vulnerability finding carries `isMalware` — true
+   for a confirmed-malicious package (an OSV `MAL-*` record, or a GitHub
+   advisory with CWE-506 such as ua-parser-js's GHSA-pjwm), not an ordinary
+   bug. Read it on the step-1 findings for this version, and call
+   `query_vulnerabilities({ name })` with no version to see whether ANY
+   release of this package was ever malicious — a past compromise is worth
+   naming even when the current version is clean. Any `isMalware: true`
+   finding on the version in question is the most severe possible outcome:
+   report it plainly as known malware, never as "worth verifying."
+   `get_latest_advisories({ type: "malware", affects: name })` (GitHub's
+   malware feed) and `({ type: "osv", affects: name })` (OpenSSF's) only
+   cover recently published advisories — useful for a brand-new incident
+   OSV hasn't indexed yet, but an empty result says nothing about history.
 3. Call `check_maintainer_changes({ name })`. It reconstructs maintainer
    add/remove history from the npm packument and flags:
    - a maintainer added recently who then published shortly after (the
@@ -71,27 +76,31 @@ investigation — use the `new-dependency-evaluation` skill.
    call: does the Sigstore build attestation's source repo/commit match
    `package.json`'s declared repository; is this version missing provenance
    while its npm-scope or maintainer peers consistently publish with it (a
-   real anomaly, not just "no provenance" — plenty of legitimate packages
-   predate the feature entirely, which this tool already accounts for via
-   the peer baseline); and does the tarball's actual install scripts/
+   real anomaly, not just "no provenance" — a version published before npm
+   provenance existed, 2023-04-19, skips this comparison, and `peers.note`
+   says so); and does the tarball's actual install scripts/
    dependencies match what's committed at the attested source commit — a
    script or dependency on npm that was never committed in source is the
    stolen-npm-token publish pattern. This is structural verification, not a
    cryptographic re-check of the Sigstore bundle — say so if the user asks
-   how deep it goes.
+   how deep it goes. For a version npm no longer lists, this tool returns a
+   not-found error that names any OSV advisories — use those, don't stop at
+   the 404.
 5. If `get_package`/`get_package_version` in step 1 showed
    `hasLifecycleScripts`/a `preinstall`/`postinstall`/`prepare` entry, follow
-   up with `analyze_install_script({ name, version })`. It fetches the published
-   tarball and statically scans the script — and the files it references —
-   against npmscan's red-flags rubric (child_process, network calls,
-   `.ssh`/`.aws`/`.npmrc`/`*TOKEN`/`*KEY` access, obfuscation, remote
-   binaries off untrusted hosts, exfil endpoints, eval-on-decoded-content),
-   returning a `totalScore`/`riskTier`. A nonzero score isn't automatically
-   malicious — a legitimate binary download (e.g. `cypress`) scores nonzero
-   too — so report the actual `findings`, not just the score.
+   up with `analyze_install_script({ name, version })`. It fetches the
+   published tarball and statically scans the script — and the files it
+   references — against npmscan's red-flags rubric (child_process,
+   network calls, `.ssh`/`.aws`/`.npmrc`/`*TOKEN`/`*KEY` access,
+   obfuscation, remote binaries off untrusted hosts, exfil endpoints,
+   eval-on-decoded-content), returning a `totalScore`/`riskTier`. A nonzero
+   score isn't automatically malicious — a legitimate binary download (e.g.
+   `cypress`) scores nonzero too — so report the actual `findings`, not just
+   the score. A `prepare`-only package scores 0 unless its command does
+   something alarming: npm never runs a dependency's `prepare` on install.
 6. If the combined picture ends up genuinely concerning (a maintainer-
-   takeover pattern, a provenance mismatch, a `possibleTyposquatOf` hit, or a
-   critical install-script finding), offer — don't force —
+   takeover pattern, a malware finding, a provenance mismatch, a
+   `possibleTyposquatOf` hit, or a critical install-script finding), offer — don't force —
    `suggest_alternative({ name, reason })` with `reason` set to whichever of
    `"vulnerable"`/`"abandoned"`/`"typosquat"`/`"general"` best fits, so the
    user has a next step instead of just a warning.
@@ -128,16 +137,6 @@ investigation — use the `new-dependency-evaluation` skill.
   back clean — a legitimate maintainer can still ship a genuinely risky
   script, and vice versa; report all applicable signals, not just whichever
   ran first.
-- Do not attempt to install, upgrade, or publish packages yourself; this
-  skill only reads data through NPMScan's read-only MCP tools.
-- Do not treat an empty `get_latest_advisories({ type: "malware" })` result
-  as a full clearance — it only rules out this one known-malicious-packages
-  feed; still run the maintainer/provenance/install-script checks that
-  follow. Conversely, do not soften a real hit from it into a hedged
-  "worth verifying" the way a `check_maintainer_changes`/
-  `check_package_provenance` finding is — a match in this feed is itself a
-  confirmed report of malicious code, not a heuristic signal.
-
 - Do not skip `check_maintainer_blast_radius` once `check_maintainer_changes`
   flags a newly added or fully turned-over maintainer — that combination is
   exactly when the follow-up matters most, not an optional extra step.
@@ -147,11 +146,24 @@ investigation — use the `new-dependency-evaluation` skill.
   latest versions landing within a short window of each other) is the
   actual signal.
 
+- Do not soften an `isMalware: true` finding into a hedged "worth verifying"
+  the way a `check_maintainer_changes`/`check_package_provenance` signal is
+  — it is a confirmed report of malicious code, not a heuristic.
+- Do not treat an empty `get_latest_advisories` malware/osv result as a
+  clearance — those feeds only cover recent advisories. The `isMalware`
+  flags on the OSV findings are the malware check.
+- Do not read a `versionExists: false` result, or a provenance not-found
+  error that names advisories, as "the version doesn't exist so it's fine" —
+  that is exactly how npm removes malicious releases.
+- Do not attempt to install, upgrade, or publish packages yourself; this
+  skill only reads data through NPMScan's read-only MCP tools.
+
 ## Tools used
 
-`get_package`, `get_package_version`, `get_latest_advisories`,
-`check_maintainer_changes`, `check_maintainer_blast_radius`,
-`check_package_provenance`, `analyze_install_script`, `suggest_alternative`
+`get_package`, `get_package_version`, `query_vulnerabilities`,
+`get_latest_advisories`, `check_maintainer_changes`,
+`check_maintainer_blast_radius`, `check_package_provenance`,
+`analyze_install_script`, `suggest_alternative`
 — all provided by the `npmscan` MCP server bundled with this plugin
 (`.mcp.json`). See [references/test-prompts.md](references/test-prompts.md)
 for prompts to manually verify this skill after installing or editing it.

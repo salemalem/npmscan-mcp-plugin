@@ -1,10 +1,9 @@
 # Test prompts for `package-trust-check`
 
 Run these manually with the plugin loaded (`claude --plugin-dir ./npmscan-mcp-plugin`)
-before publishing a change to this skill. Each case names an exact
-package/version and the exact fields the response should surface — not just
-"did a tool get called," but "did the right version and finding survive
-into the answer."
+before publishing a change to this skill. Each case names an exact package/version and the exact fields the
+response should surface — not just "did a tool get called," but "did the
+right version and finding survive into the answer."
 
 1. **The chalk/debug "qix" compromise — now outside the lookback window,
    correctly distinguished from "never happened"** — ask:
@@ -119,14 +118,13 @@ into the answer."
     — the exact replacement names should appear in the answer, not a
     generic "consider migrating away."
 
-11. **An empty malware-feed check is not read as full clearance** — ask:
+11. **An empty malware feed is not a clearance** — ask:
     > "Is lodash safe to use?"
-    `get_latest_advisories({ type: "malware", affects: "lodash" })` should
-    come back with no matching advisories (lodash has never been flagged as
-    known malware). Expect the response to still run the rest of the
-    checks (maintainer changes, provenance, install script) rather than
-    stopping at "not in the malware feed, so it's safe" — an empty result
-    from that one feed is not, on its own, a full clean bill of health.
+    `get_latest_advisories({ type: "malware" | "osv", affects: "lodash" })`
+    returns nothing, and those feeds only list recent advisories anyway.
+    Expect the response to rely on the `isMalware` flags of the OSV findings
+    instead, and to still run the maintainer/provenance/install-script
+    checks — never "not in the malware feed, so it's safe."
 
 12. **A long-standing maintainer quietly dropped, not a full turnover** —
     ask:
@@ -170,6 +168,15 @@ into the answer."
     same urgency framing regardless of activity). **Note:**
     synthetic-fixture-only, same caveat as cases 12-13.
 
+15. **A version npm removed for malware** — ask:
+    > "Is ua-parser-js 0.7.29 safe?"
+    Verified live: `get_package_version` returns `versionExists: false` with
+    GHSA-pjwm-rvh2-c87w (`isMalware: true`), and
+    `check_package_provenance`'s not-found error names that advisory as
+    KNOWN MALWARE. Expect a plain "this was a malicious release, removed
+    from npm" verdict naming the advisory — not "that version doesn't
+    exist," and not a hedged "worth verifying."
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
-check the **Custom commands** tab for `/npmscan:package-trust-check`, or
-just invoke it directly with that name.
+check the **Custom commands** tab for `/npmscan:package-trust-check`, or just
+invoke it directly with that name.

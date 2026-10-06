@@ -9,8 +9,8 @@ Use this skill when the user wants a security check across multiple npm
 packages at once (a `package.json`, a lockfile, or a plain list of
 `name@version` pairs) — not for a question about a single package. A plain
 factual single-package question ("what does X do") you can answer directly
-with `get_package` or `query_vulnerabilities`; a single-package *trust*
-question ("is X safe," "was X compromised/hijacked") should use the
+with `get_package` or `query_vulnerabilities`; a single-package
+*trust* question ("is X safe," "was X compromised/hijacked") should use the
 `package-trust-check` skill instead, which runs the deeper
 maintainer-history and publish-provenance checks this skill deliberately
 reserves for already-flagged packages only. A forward-looking question about
@@ -51,7 +51,14 @@ Accept dependency name+version pairs from:
   possible typosquat, or deprecated — the `check_maintainer_changes`/
   `check_package_provenance` ownership checks too, up to 5 packages per call,
   prioritized the same way step 6 already ranks them) in one call, replacing
-  that part of the flow below. Check `ownershipCheckNote` for any flagged
+  that part of the flow below. Read `coverage` and the summary first: every
+  lockfile entry is checked for vulnerabilities, but only 100 packages
+  (vulnerable ones first) get the license/install-script detail, and a
+  summary starting `PARTIAL AUDIT` means not everything was covered — say
+  so; never call a repo "clean" when `coverage.complete` is false.
+  `vulnerablePackageCount` covers the whole lockfile; vulnerable packages
+  past the 100-package detail cap are in `overflowVulnerablePackages`.
+  Check `ownershipCheckNote` for any flagged
   package past that 5-package cap and call the two ownership tools on those
   directly. Still follow up per-package with `analyze_install_script` (for a
   package the tool's lighter `installScriptScanScope:
@@ -83,12 +90,12 @@ than guessing at what to audit.
    every resolved package and emit a warning about that.
 3. Call `batch_query_vulnerabilities` once with the parsed/raw input. The tool
    now chunks large inventories internally — do not re-chunk the request in
-   the skill layer unless the client's own request-size limit forces it. Each
-   finding already includes severity, a summary, CVE aliases, and the fixed
-   version — do not call `query_vulnerabilities` again per flagged package
-   just to re-fetch detail you already have. The only exception: if the
-   result has an `enrichmentNote` (a very large audit crossed the enrichment
-   cap), the vulnerabilities it names are ID-only — call
+   the skill layer unless the client's own request-size limit forces it.
+   Each finding already includes severity, a summary, CVE aliases, and the
+   fixed version — do not call `query_vulnerabilities` again per flagged
+   package just to re-fetch detail you already have. The only exception:
+   if the result has an `enrichmentNote` (a very large audit crossed the
+   enrichment cap), the vulnerabilities it names are ID-only — call
    `query_vulnerabilities` on those *specific* packages if the user needs
    full detail on them. Each result also carries `signals` (`deprecated`,
    `hasInstallScripts`, `popularityTier`/`maintenanceTier`,
@@ -102,14 +109,17 @@ than guessing at what to audit.
    the vulnerability count above was computed for the DECLARED package, not
    whatever the tarball actually is, so treat this as its own critical
    finding, separate from and on top of any CVE result. See the tool's own
-   `warnings` array for anything flagged this way.
-   For a hand-typed dependency list or raw `package.json`
-   content (names never resolved against a registry, unlike a real lockfile/
-   SBOM), also check the result's `unresolvedPackages`/`existenceCheckNote`:
-   a name that doesn't actually exist on npm shows `vulnerabilityCount: 0`
-   exactly like a genuinely clean package, and that field is what tells the
-   two apart — report an unresolved name as its own finding (typo? never
-   published?), never as "no known vulnerabilities."
+   `warnings` array for anything flagged this way. For a hand-typed
+   dependency list or raw `package.json` content (names never resolved
+   against a registry, unlike a real lockfile/SBOM), also check the result's
+   `unresolvedPackages`/`existenceCheckNote`: a name that doesn't exist on
+   npm shows `vulnerabilityCount: 0` exactly like a genuinely clean package,
+   and that field is what tells the two apart — report an unresolved name as
+   its own finding (typo? never published?), never as "no known
+   vulnerabilities." Every finding also carries `isMalware` — true for a
+   confirmed-malicious package (an OSV `MAL-*` record, or a GitHub advisory
+   with CWE-506), not an ordinary bug. An `isMalware` finding is the
+   headline of the report: the package must be removed, not patched.
 4. For every package the batch call flags, use `signals` from step 3 first
    — it already gives you `deprecated`/`maintenanceSummary`-equivalent data,
    `hasInstallScripts`, and `possibleTyposquatOf` for the specific requested
@@ -122,10 +132,11 @@ than guessing at what to audit.
    follow up with `analyze_install_script` — it fetches the published
    tarball and statically scans the script and the files it references
    against npmscan's red-flags rubric, returning a `totalScore`/`riskTier`.
-   Also surface `signals.deprecated` (and `maintenanceSummary`, when you
-   did call `get_package`) — a deprecated or abandoned dependency is a real
-   finding, not just a CVE footnote. If
-   `signals.possibleTyposquatOf` is set, this package's name is one typo
+   `signals.hasInstallScripts` covers preinstall/install/postinstall only — a
+   dependency's `prepare` never runs on a registry install. Also surface
+   `signals.deprecated` (and `maintenanceSummary`, when you did call
+   `get_package`) — a deprecated or abandoned dependency is a real finding,
+   not just a CVE footnote. If `signals.possibleTyposquatOf` is set, this package's name is one typo
    away from a much more popular one — flag it prominently as a
    supply-chain risk to verify, not as confirmed malice.
 5. If the user wants coverage beyond the direct dependencies you were given
@@ -158,21 +169,16 @@ than guessing at what to audit.
      against reality: does the attested source repo/commit match
      `package.json`'s declared repository, is this package missing
      provenance while its npm-scope/maintainer peers consistently have it,
-     and does the tarball's actual install scripts/dependencies match what's
+     and does the tarball's install scripts/dependencies match what's
      actually committed at the attested source commit (a mismatch here is
      the stolen-npm-token publish pattern). Structural only, not a
-     cryptographic re-verification.
-   - `get_latest_advisories({ type: "malware", affects: name })` — a cheap,
-     direct check of whether this exact package has ever been flagged in
-     GitHub's known-malicious-packages feed, independent of the CVE-backed
-     findings step 3/5 already surfaced. A hit is the single most severe
-     possible finding for that package — report it plainly, don't soften it
-     into "worth verifying" the way the two hedged ownership checks above
-     are reported.
-7. Only call `get_latest_advisories({ type: "reviewed", ... })` (the
-   default CVE-backed advisories, distinct from the `type: "malware"` check
-   in step 6) if the user separately asks for broader npm-ecosystem
-   context — it is not part of the default flow.
+     cryptographic re-verification. A version published before npm
+     provenance existed (2023-04-19) skips the peer comparison.
+7. Only call `get_latest_advisories` if the user separately asks for
+   broader npm-ecosystem context — it is not part of the default flow, and
+   it is NOT the malware check: its `malware`/`osv` feeds only list recently
+   published advisories. Malware detection is the `isMalware` flag on the
+   findings from step 3.
 8. If the user asks about license policy/compliance (or pastes an
    allow/deny list), call `check_license_compliance` with the same parsed
    package list. With no `policy` given it applies the default enterprise
@@ -186,12 +192,14 @@ than guessing at what to audit.
    currentVersion, fixedVersion, advisoryId, findingType}` entry per finding
    to get a remove-now / patch-now / patch-soon / scheduled / monitor tier
    per finding (a confirmed-malware finding forces `remove-now` ahead of
-   everything else — pass the advisory's own `id` through as `advisoryId`,
-   which auto-detects a `MAL-*` id as malware, and set `findingType:
-   "malware"` explicitly whenever you can otherwise tell it's a confirmed
-   malicious package rather than an ordinary vulnerability; CISA KEV status
-   overrides everything else after that; EPSS exploitation probability is
-   the primary ranking signal otherwise; severity is the fallback). Lead the
+   everything else — pass each finding's `id` through as `advisoryId`, which
+   the tool looks up to detect malware advisories itself, and set
+   `findingType: "malware"` for every finding whose `isMalware` was true;
+   CISA KEV status overrides everything else after that; EPSS exploitation
+   probability is the primary ranking signal otherwise, and an EPSS of 10%+
+   always ranks at least `patch-soon`; severity is the fallback). If
+   `malwareCheckFailedAdvisoryIds` is non-empty, say those findings' malware
+   status is unknown. Lead the
    summary report with this ranking instead of a flat severity list — it
    answers "what do I fix first," which is usually what the user actually
    needs from an audit with more than a few findings. Treat any `remove-now`
@@ -224,14 +232,19 @@ replaces the batch-query flow above, it doesn't precede it.
 - Lead with `installScriptIntroduced` findings — a routine-looking version
   bump that quietly adds a postinstall script is the shape of a
   compromised-maintainer supply-chain attack, and is the single highest-
-  signal field this tool returns.
+  signal field this tool returns. It counts preinstall/install/postinstall
+  only; a newly added `prepare` shows up in `installScriptKeysIntroduced`
+  but never runs on a registry install, so mention it without alarm.
 - Check `sourceIntegrityChanged` on every changed package too, right
   alongside `installScriptIntroduced` — it catches a DIFFERENT attack shape:
   a lockfile entry whose resolved tarball URL or integrity hash changed
   while the version string stayed IDENTICAL (a compromised registry mirror,
   or a hand-edited lockfile), which a version-only read of the diff would
-  report as "no change." See `resolvedUrl`/`integrity` on the entry for
-  what actually changed.
+  report as "no change" (`changeType: "source-swap"`). See `resolvedUrl`/
+  `integrity` on the entry for what actually changed. If `identityMismatch`
+  is true, the tarball is a different package or version than declared —
+  `tarballName`/`tarballVersion` say what really installs, and the
+  vulnerability fields describe that. Report it as a headline finding.
 - Check `projectLifecycleChanges` (the SCANNED PROJECT's own root
   preinstall/install/postinstall/prepare scripts) and `overridesChanges`
   (`overrides`/`resolutions`/`pnpm.overrides`) even when the dependency list
@@ -278,11 +291,6 @@ on top of the same `diff_dependencies`/`simulate_dependency_upgrade` output.
   the tools returned.
 - Do not silently drop non-npm SBOM entries — say they were skipped because
   npmscan's vulnerability pipeline is npm-only.
-- Do not read a name in `unresolvedPackages` (from a hand-typed list or raw
-  `package.json` audit) as clean just because its `vulnerabilityCount` is 0 —
-  it means the name wasn't found on the npm registry at all, not that it has
-  no known vulnerabilities. This check doesn't run for a real lockfile/SBOM
-  input, since those names were already registry-resolved when generated.
 - Do not treat `possibleTyposquatOf` as proof of malice — it's a rule-based
   heuristic (name similarity + low popularity), not a verdict. Report it as
   "worth verifying," matching the tool's own hedged language.
@@ -307,11 +315,19 @@ on top of the same `diff_dependencies`/`simulate_dependency_upgrade` output.
   for that package were computed for the DECLARED name/version, not
   whatever the resolved tarball actually is. Report it as its own headline
   finding, not a footnote.
+- Do not read a name in `unresolvedPackages` (from a hand-typed list or raw
+  `package.json` audit) as clean just because its `vulnerabilityCount` is 0 —
+  it means the name wasn't found on the npm registry at all, not that it has
+  no known vulnerabilities. This check doesn't run for a real lockfile/SBOM
+  input, since those names were already registry-resolved when generated.
+- Do not call an `audit_github_repository` result clean when
+  `coverage.complete` is false or the summary starts `PARTIAL AUDIT`.
 - Do not skip `projectLifecycleChanges`/`overridesChanges` when reporting a
   `diff_dependencies` result just because the dependency list itself shows
   no changes — a PR that only touches the project's own root scripts or an
   override is a real, flaggable change with nothing in `added`/`removed`/
   `changed` to hint at it.
+
 - Do not attempt to install, upgrade, or publish packages yourself; this
   skill only reads data through NPMScan's read-only MCP tools.
 
@@ -320,9 +336,9 @@ on top of the same `diff_dependencies`/`simulate_dependency_upgrade` output.
 `batch_query_vulnerabilities`, `get_package`, `get_package_version`,
 `analyze_install_script`, `analyze_transitive_dependencies`,
 `check_maintainer_changes`, `check_maintainer_blast_radius`,
-`check_package_provenance`, `check_license_compliance`, `diff_dependencies`,
-`prioritize_remediation`, `enrich_npm_audit`, `suggest_alternative`,
-`get_latest_advisories`, `audit_github_repository` — all provided by the
-`npmscan` MCP server bundled with this plugin (`.mcp.json`). See
-[references/test-prompts.md](references/test-prompts.md) for prompts to
-manually verify this skill after installing or editing it.
+`check_package_provenance`,
+`check_license_compliance`, `diff_dependencies`, `prioritize_remediation`,
+`enrich_npm_audit`,
+`suggest_alternative`, `get_latest_advisories`, `audit_github_repository` — all provided by the `npmscan` MCP server bundled with this plugin
+(`.mcp.json`). See [references/test-prompts.md](references/test-prompts.md)
+for prompts to manually verify this skill after installing or editing it.

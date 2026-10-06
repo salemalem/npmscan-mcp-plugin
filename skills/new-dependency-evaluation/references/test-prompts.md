@@ -1,10 +1,9 @@
 # Test prompts for `new-dependency-evaluation`
 
 Run these manually with the plugin loaded (`claude --plugin-dir ./npmscan-mcp-plugin`)
-before publishing a change to this skill. Each case names the exact tool
-calls and fields the response should surface — not just "did a tool get
-called," but "did the routing logic pick the right case and did the real
-data survive into the answer."
+before publishing a change to this skill. Each case names the exact tool calls and fields the response
+should surface — not just "did a tool get called," but "did the routing
+logic pick the right case and did the real data survive into the answer."
 
 1. **Three named candidates for the same job (routing case 1)** — ask:
    > "Should we use axios, got, or node-fetch for our new HTTP client?"
@@ -47,13 +46,14 @@ data survive into the answer."
     same prompt as case 4. `suggest_alternative({ name: "uuid", reason:
     "general", limit: 4 })` returns `win-guid` in its `suggestions` with
     `description: "Windows legacy GUID parser"` and `categoryOverlap:
-    ["guid"]` (a single generic token) — it is not a UUID-generation
-    library, it's an unrelated Windows binary-format parser that happens
-    to have very high weekly downloads. Expect the response to exclude
-    `win-guid` from the `compare_packages` call (or if it slipped through,
-    to flag it explicitly as not actually comparable rather than silently
-    including it in the pick) — not treat its high popularity as making it
-    a legitimate contender for a UUID library comparison.
+    ["guid"]` (a single generic token) — a real result, confirmed live: it
+    is not a UUID-generation library, it's an unrelated Windows binary-
+    format parser that happens to have very high weekly downloads. Expect
+    the response to exclude `win-guid` from the `compare_packages` call (or
+    if it slipped through, to flag it explicitly as not actually
+    comparable rather than silently including it in the pick) — not treat
+    its high popularity as making it a legitimate contender for a UUID
+    library comparison.
 
 5. **One named candidate whose only real alternative is a language
    built-in (routing case 2, no-compare fallback)** — ask:
@@ -165,6 +165,13 @@ data survive into the answer."
     `found: false` with a `resolutionError` mentioning percent-encoding —
     not a total failure of the tool call.
 
+17. **A `prepare`-only candidate is not an install-script risk** — ask:
+    > "nanoid vs uuid vs @paralleldrive/cuid2 for generating ids?"
+    uuid (`prepare: lefthook install`) and cuid2 (`prepare: husky`) used to
+    get an install-script penalty that decided the pick. Verified live: all
+    three now report `installScriptRisk.riskTier: "none"`. Expect the
+    comparison not to cite install scripts against uuid or cuid2.
+
 To confirm the skill loaded and is namespaced correctly, run `/help` and
-check the **Custom commands** tab for `/npmscan:new-dependency-evaluation`,
-or just invoke it directly with that name.
+check the **Custom commands** tab for `/npmscan:new-dependency-evaluation`, or just
+invoke it directly with that name.

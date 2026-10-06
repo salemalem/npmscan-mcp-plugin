@@ -99,7 +99,7 @@ Download from <https://www.kimi.ai/products/kimi-work> (or kimi.ai →
 
 1. Plugins → **Personal** tab → find **NPMScan** → click **+** / **Install**.
 2. Start a new conversation and try (full list: "Example use cases" in
-   [CLAUDE.md](CLAUDE.md)):
+   [SUBMISSION.md](SUBMISSION.md)):
    ```
    Does lodash have any known vulnerabilities?
    Is chalk 5.3.1 safe? I heard there was a supply-chain incident.

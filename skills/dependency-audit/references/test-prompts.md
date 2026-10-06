@@ -1,10 +1,9 @@
 # Test prompts for `dependency-audit`
 
 Run these manually with the plugin loaded (`claude --plugin-dir ./npmscan-mcp-plugin`)
-before publishing a change to this skill. Each case names exact
-packages/versions/CVE IDs and the exact fields the response should surface —
-not just "did the right tool get called," but "did the specific finding
-survive into the final report."
+before publishing a change to this skill. Each case names exact packages/versions/CVE IDs and the exact
+fields the response should surface — not just "did the right tool get
+called," but "did the specific finding survive into the final report."
 
 1. **A real, pinned CRITICAL CVE inside a normal audit** — paste:
    > `{ "dependencies": { "minimist": "1.2.5", "is-number": "7.0.0" } }`
@@ -376,6 +375,24 @@ survive into the final report."
     `pkg-fixed-elsewhere` itself has a `fixedVersion` — the two are
     different fields for a reason, and conflating them tells the user to
     bump the wrong package.
+
+33. **A malware advisory is the headline, not a CVE row** — paste:
+    > `{ "dependencies": { "crossenv": "6.1.1", "lodash": "4.17.20" } }`
+    and ask "Audit my dependencies." crossenv's advisory GHSA-c2m4-w5hm-vqjw
+    ("crossenv is malware") carries `isMalware: true` but only a HIGH
+    severity and a CVE with low EPSS. Expect crossenv reported first as
+    known malware to remove (and, if `prioritize_remediation` runs, ranked
+    `remove-now`), separate from and above lodash's ordinary
+    vulnerabilities.
+
+34. **A partial repo audit is never called clean** — ask:
+    > "Is https://github.com/babel/babel clean?"
+    Verified live: `audit_github_repository` checks all ~1,560 yarn.lock
+    entries for vulnerabilities (24 vulnerable, including tinypool
+    CRITICAL), details 100 of them, and the summary starts `PARTIAL AUDIT`
+    with `coverage.complete: false`. Expect the answer to report the
+    vulnerable packages and say plainly that the license/install-script
+    detail covered only 100 packages — never a yes/no "clean."
 
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:dependency-audit`, or just

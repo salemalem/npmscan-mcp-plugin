@@ -35,6 +35,7 @@ Symptom → playbook `id` guesses for the no-package-name case:
 - downloads/runs a binary, executable, or installer during install → `postinstall-binary`
 - name looks like / is close to a well-known package, "typosquat," "fake version of X" → `suspected-typosquat`
 - general "hacked," "compromised," "malicious code," "supply chain attack" with no more specific detail → `supply-chain-compromise`
+- "we published something we didn't," "our npm token was stolen," "our package got hijacked," a worm spreading through packages we maintain (Shai-Hulud) — the user is the PUBLISHER, not a consumer → `compromised-publisher` (token revocation, credential rotation, deprecating/unpublishing the bad versions, telling users). If both apply — they installed something malicious AND it then published from their account — present both playbooks.
 - runs shell commands, `exec`, spawns a process during install → `child-process-in-install`
 - "calls out," "connects to a server," "phones home" during install → `unexpected-network-install`
 - "new maintainer," "ownership changed," "ownership transfer," "ex-employee's account" → `maintainer-change-flagged`
@@ -112,6 +113,10 @@ Symptom → playbook `id` guesses for the no-package-name case:
   marked it `incident` (a real, verified compromise) or `reading`
   (background material, not itself a breach) rather than upgrading a
   `reading` reference into a claimed incident.
+
+- Do not answer a "we were the ones who got compromised" description with
+  only the consumer-side `supply-chain-compromise` steps — pinning and
+  auditing don't revoke a stolen token; use `compromised-publisher`.
 - Do not attempt to install, upgrade, or publish packages yourself; this
   skill only reads data through NPMScan's read-only MCP tools.
 
@@ -119,7 +124,6 @@ Symptom → playbook `id` guesses for the no-package-name case:
 
 `get_remediation_playbook`, plus whichever of `analyze_install_script`,
 `check_maintainer_changes`, `check_package_provenance` is needed to produce
-the finding this skill responds to — all provided by the `npmscan` MCP
-server bundled with this plugin (`.mcp.json`). See
-[references/test-prompts.md](references/test-prompts.md) for prompts to
-manually verify this skill after installing or editing it.
+the finding this skill responds to — all provided by the `npmscan` MCP server bundled with this plugin
+(`.mcp.json`). See [references/test-prompts.md](references/test-prompts.md)
+for prompts to manually verify this skill after installing or editing it.

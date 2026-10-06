@@ -105,8 +105,8 @@ alone does not catch. So for every candidate before it enters
 2. Read `differentiators` before `recommendation` — it names which
    candidate(s) stand out on downloads, GitHub stars, TypeScript support,
    known vulnerabilities, deprecation, typosquat flag, install-script risk,
-   and install-size footprint. This is what makes the comparison legible;
-   don't just report the final pick with no supporting detail.
+   and install-size footprint. This is what makes the comparison legible; don't just report the
+   final pick with no supporting detail.
 3. Report `recommendation.pick`, `runnerUp`, and `rationale` verbatim —
    don't substitute your own judgment for the deterministic score unless a
    `candidates[]` entry shows something the score can't see (e.g. the user
@@ -123,7 +123,10 @@ alone does not catch. So for every candidate before it enters
    `installScriptRisk.totalScore` and the user is about to actually install
    it, mention that `analyze_install_script` (via `package-trust-check`)
    gives the deeper, tarball-aware scan before they commit — don't run it
-   automatically as part of this skill, just point at it.
+   automatically as part of this skill, just point at it. A candidate whose
+   only lifecycle script is `prepare` (uuid's `lefthook install`) scores 0:
+   npm never runs a dependency's `prepare` on install, so it is not a risk
+   to weigh against it.
 6. If the user's decision also turns on license policy (they mention a
    license constraint, or ask "which of these is safe to use license-wise"),
    follow up with `check_license_compliance` on the shortlist — it's not
@@ -132,18 +135,23 @@ alone does not catch. So for every candidate before it enters
 7. Sanity-check `githubStars` against `weeklyDownloads` per candidate:
    `githubStars` is attributed to whatever repository the candidate's own
    `package.json` declares, unverified — a tiny, low-download package
-   showing a huge star count can mean its declared `repository` field
-   points at a different, unrelated project's repo rather than its own.
-   Flag a large downloads/stars mismatch like this as worth independent
-   verification before adopting the package, rather than reporting the
-   star count at face value as a credibility signal; this skill's tools
-   don't run the deeper source-attestation check that would confirm or
-   rule this out (`check_package_provenance`, via `package-trust-check`).
+   showing a huge star count (e.g. thousands of stars on a package with
+   under a thousand weekly downloads) can mean its declared `repository`
+   field points at a different, unrelated project's repo rather than its
+   own (confirmed directly: `@aigne/uuid`, ~850 weekly downloads, declares
+   `repository: github.com/uuidjs/uuid` — the real `uuid` package's repo,
+   not its own — and so inherits that repo's star count). Flag a large
+   downloads/stars mismatch like this as worth independent verification
+   before adopting the package, rather than reporting the star count at
+   face value as a credibility signal; this skill's tools don't run the
+   deeper source-attestation check that would confirm or rule this out
+   (`check_package_provenance`, via `package-trust-check`).
 8. Treat `downloadTrend.changePercent` with caution when
    `weeklyDownloads` is low (roughly under a few thousand) — a small
-   absolute change produces a large, noisy percentage. Lead with the
-   absolute download figure, not the percentage, for any low-volume
-   candidate.
+   absolute change produces a large, noisy percentage (e.g. a candidate
+   with 850 weekly downloads showing `"growing"` at 800%+ off a tiny prior
+   base is statistical noise, not real momentum). Lead with the absolute
+   download figure, not the percentage, for any low-volume candidate.
 9. Note that `installSize.transitive.transitiveUnpackedSize` (a rollup
    across the candidate's resolved dependency tree, up to depth 2 / 60
    nodes) is often the more useful figure than the candidate's own
@@ -194,8 +202,10 @@ alone does not catch. So for every candidate before it enters
 - Do not pass every `suggest_alternative`/`search_packages` result straight
   into `compare_packages` on the strength of `categoryOverlap` alone — a
   single generic shared token plus high popularity can rank an unrelated
-  package first. Read each candidate's `description` and drop ones that
-  aren't actually the same tool for the job before comparing them.
+  package first (verified: `win-guid`, a Windows GUID *parser*, outranked
+  a real UUID library when comparing alternatives to `uuid`). Read each
+  candidate's `description` and drop ones that aren't actually the same
+  tool for the job before comparing them.
 - Do not report a candidate's `githubStars` as a plain credibility signal
   without checking it against `weeklyDownloads` first — a low-download
   package with implausibly high stars likely has a `repository` field
@@ -208,7 +218,6 @@ alone does not catch. So for every candidate before it enters
 
 `compare_packages`, `suggest_alternative`, `search_packages`, `get_package`
 (for the source description in routing case 2), and optionally
-`check_license_compliance` — all provided by the `npmscan` MCP server
-bundled with this plugin (`.mcp.json`). See
-[references/test-prompts.md](references/test-prompts.md) for prompts to
-manually verify this skill after installing or editing it.
+`check_license_compliance` — all provided by the `npmscan` MCP server bundled with this plugin
+(`.mcp.json`). See [references/test-prompts.md](references/test-prompts.md)
+for prompts to manually verify this skill after installing or editing it.

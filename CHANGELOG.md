@@ -1,6 +1,41 @@
 # Changelog
 
-## Unreleased
+## 3.1.0
+
+Skills are now generated from the npmscan server repo's `mcp/skills/`
+(`npm run sync:plugin-skills` there) instead of being edited here — the two
+copies had drifted in both directions. Edits made only here (the
+`unresolvedPackages` check, deprecated-package reporting, the read-only
+reminder, install-size guidance) were merged back first, so nothing was lost.
+Follows the server's stress-test fixes:
+
+- All skills: every vulnerability finding now carries `isMalware`; a
+  confirmed-malware finding is reported as malware to remove, never as a
+  hedged signal.
+- `package-trust-check`: the malware check is now the `isMalware` flag on
+  OSV findings (including `query_vulnerabilities` across every past
+  release). The `get_latest_advisories` malware/osv feeds only list recent
+  advisories, so an empty result is no longer treated as meaningful. A
+  version npm removed (`versionExists: false`) is reported as a likely
+  malicious release, not "not found".
+- `ci-pr-gate`: FAILs `isMalware` findings, `riskTier: "do-not-upgrade"`
+  and `identityMismatch`; a dependency bump that only adds `prepare` is a
+  WARN, not a FAIL. Override changes follow fixed steps — check the version
+  that will now install and FAIL only on malware or a CRITICAL/HIGH finding,
+  otherwise WARN, and WARN with the reason when it can't be checked — so the
+  same PR always gets the same verdict.
+- `dependency-audit`: reads `coverage` from `audit_github_repository` and
+  never calls a partial audit clean; reports `identityMismatch` and
+  `source-swap` from `diff_dependencies`.
+- `incident-response`: a "we were the ones compromised" description maps to
+  the new `compromised-publisher` playbook (token revocation, credential
+  rotation, deprecating the bad versions).
+- `new-dependency-evaluation`: a `prepare`-only candidate is no longer
+  treated as an install-script risk.
+- `CLAUDE.md` renamed to `SUBMISSION.md`: it holds directory-submission
+  notes, and a root `CLAUDE.md` is not something a plugin should ship.
+
+## 3.0.2
 
 Syncs the skills with the npmscan server's Sep 24–25 skill refresh
 (`npmscan/mcp/skills`), keeping this plugin's own Claude Code–specific

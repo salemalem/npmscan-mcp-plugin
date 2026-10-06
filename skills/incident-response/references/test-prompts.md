@@ -1,9 +1,9 @@
 # Test prompts for `incident-response`
 
 Run these manually with the plugin loaded (`claude --plugin-dir ./npmscan-mcp-plugin`)
-before publishing a change to this skill. Each case names the exact tool
-calls and fields the response should surface — not just "did a tool get
-called," but "did the right playbook steps survive into the answer."
+before publishing a change to this skill. Each case names the exact tool calls and fields the response
+should surface — not just "did a tool get called," but "did the right
+playbook steps survive into the answer."
 
 1. **A maintainer change, chained into remediation** — ask:
    > "A package's maintainer list shows a new account added shortly before
@@ -29,8 +29,8 @@ called," but "did the right playbook steps survive into the answer."
    > "check_package_provenance flagged install-script-added on
    > @npmcli/arborist — what's the incident response?"
    Expect `get_remediation_playbook({ rules: ["install-script-added"] })` to
-   return the `provenance-mismatch` playbook. The response should name its
-   actual steps: freeze to the last clean version, diff the flagged
+   return the new `provenance-mismatch` playbook. The response should name
+   its actual steps: freeze to the last clean version, diff the flagged
    version's install scripts/dependencies against source at the attested
    commit, rotate the npm publish token and CI secrets for that package,
    require `--provenance` plus a second maintainer's review going forward —
@@ -185,6 +185,17 @@ called," but "did the right playbook steps survive into the answer."
     evidence of risk on its own.'` and `'No playbook found with id
     "not-a-real-playbook-id".'` — rather than inventing generic advice for
     the two that came back unmatched.
+
+16. **We are the compromised publisher** — say:
+    > "Our npm token got stolen and someone published new versions of our
+    > packages with a worm in them. What do we do?"
+    Expect `get_remediation_playbook({ id: "compromised-publisher" })`
+    (no package-specific finding tool first — there's no package named) and
+    the response to lead with revoking npm/GitHub tokens and rotating every
+    credential, then deprecating/unpublishing the bad versions and telling
+    users — not only the consumer-side `supply-chain-compromise` steps
+    (pinning, auditing), which don't stop a stolen token from publishing
+    again.
 
 To confirm the skill loaded and is namespaced correctly, run `/help` and
 check the **Custom commands** tab for `/npmscan:incident-response`, or just

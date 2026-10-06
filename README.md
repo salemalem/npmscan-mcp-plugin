@@ -4,6 +4,14 @@ A [Claude Code plugin](https://code.claude.com/docs/en/plugins) that gives
 Claude read-only npm package and vulnerability lookups, backed by
 [npmscan.com](https://npmscan.com)'s free, unauthenticated MCP server.
 
+## Direct links
+
+- **Claude** (Anthropic plugin directory):
+  [claude.ai/customize/skills/…/npmscan](https://claude.ai/customize/skills/id/aa8fcafe-0bcd-41b6-9e07-6c7ebbb71153%40anthropic-plugin-directory)
+- **ChatGPT** (OpenAI plugins directory):
+  [chatgpt.com/plugins/…/npmscan](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2)
+- **Setup docs for other clients**: [npmscan.com/mcp](https://npmscan.com/mcp)
+
 ## What it adds
 
 - **MCP server** (`npmscan`, `https://npmscan.com/api/mcp`) with
@@ -214,7 +222,7 @@ own manifest and both load the same five skills.
   Plugin Builder to import `https://github.com/salemalem/npmscan-mcp-plugin`.
   It appears under the **Personal** tab; click **+** to install.
 
-The manifest (v3.0.2) is prepared for the official Kimi marketplace: full
+The manifest (v3.1.0) is prepared for the official Kimi marketplace: full
 `zh-CN` locale, `brandColor` (#ef4444, npmscan.com's primary red), a dark
 rounded-tile `icon.png` built from the site's dark-mode logo, and
 `hostKind: hosted`. Local validation passes with 0 errors / 0 warnings.
@@ -231,8 +239,9 @@ Claude Code auto-loads those too.
 
 The same `npmscan` MCP server and equivalent `dependency-audit` /
 `package-trust-check` / `new-dependency-evaluation` / `incident-response` /
-`ci-pr-gate` skills are also submitted to OpenAI's ChatGPT Plugins
-directory (submission artifacts live in the main
+`ci-pr-gate` skills are also available in OpenAI's
+[ChatGPT Plugins directory](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2)
+(submission artifacts live in the main
 [npmscan](https://npmscan.com) app repo, under `mcp/`). Each pair of skills
 is kept in sync by hand; if you change a workflow here, mirror the change
 there too.

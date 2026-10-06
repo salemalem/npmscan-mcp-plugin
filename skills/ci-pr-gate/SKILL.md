@@ -26,29 +26,30 @@ they want to know what to actually *do* about a finding, hand off to
 
 1. **Two full snapshots** (any mix of `package.json`, `package-lock.json`,
    `yarn.lock`, `pnpm-lock.yaml`) pasted as a before/after pair — call
-   `diff_dependencies({ before, after })` directly.
+   `diff_dependencies({ before, after })` directly. When the PR changes BOTH
+   `package.json` and its lockfile and both pairs were given, diff each pair
+   (two calls): `package.json` carries `overridesChanges` and the project's
+   own scripts, the lockfile carries the exact versions that will install —
+   the override rule below needs both.
 2. **One or more named bumps with no full snapshots** — the common
    Renovate/Dependabot PR-title shape ("Bump lodash from 3.10.1 to
-   4.17.21," "upgrade minimist to 1.2.6") — for a single named package, call
-   `simulate_dependency_upgrade({ packageName, currentVersion,
-   targetVersion })` directly. For more than one named package in the same
-   PR, use the tool's own batch form instead of calling it once per
-   package: `simulate_dependency_upgrade({ packages: [{ packageName,
-   currentVersion, targetVersion }, ...] })`, one call for the whole set
-   (up to 100 items). The batch result comes back as `results[]` (one entry
-   per item, each shaped like the single-item result plus a `fetchError`
-   field for a name that couldn't be resolved at all) plus a `batchSummary`
-   (`totalRequested`, `fetchFailedCount`, `riskTierCounts`,
-   `vulnQueryFailedCount`) — read every entry in `results[]` into the Gate
-   policy below, not just the summary counts. Cap it at 100 packages in one
-   turn (the tool's own limit); if more were named, run the first 100 and
-   say explicitly which were skipped rather than silently dropping them.
+   4.17.21," "upgrade minimist to 1.2.6") — call
+   `simulate_dependency_upgrade` once. For a single bump use
+   `{ packageName, currentVersion, targetVersion }`; for two or more, pass
+   them all in one call as `{ packages: [{ packageName, currentVersion,
+   targetVersion }, ...] }` (1-100 items) rather than one call per package.
+   A batch response puts each package's result under `results[]` and adds
+   a `batchSummary` — run every entry in `results[]` through the Gate
+   policy below, not just the summary counts; an item with a non-null `fetchError` couldn't be
+   resolved at all — list it in the table as unchecked (WARN), never as a
+   PASS. If more than 100 bumps were named, run the first 100 and say
+   explicitly which were skipped rather than silently dropping them.
 3. **Both** (full snapshots plus one or more specific packages the user
    wants a deeper semver/breaking-change read on beyond what a diff
-   computes) — run `diff_dependencies` first, then add a
-   `simulate_dependency_upgrade` call (single-item or batch, per case 2)
-   only for the specifically-named packages. Don't run both tools for the
-   same package by default; that's redundant.
+   computes) — run `diff_dependencies` first, then add one
+   `simulate_dependency_upgrade` call (batched via `packages` when there's
+   more than one) only for the specifically-named packages. Don't run both tools for the same package by default; that's
+   redundant.
 4. **Nothing parseable** — ask for the before/after content or the exact
    `name@current→target` bump(s). Don't guess a version that wasn't given.
 
@@ -58,12 +59,11 @@ they want to know what to actually *do* about a finding, hand off to
 2. Collect every vulnerability finding worth ranking from the results:
    any entry with `vulnerabilityDelta` of `"introduced"` or
    `"still-vulnerable"` (from either tool), taking `id`/severity from its
-   `vulnerabilities[]` array (diff) or `targetVulnerabilities[]` (simulate).
-   Pass each finding's `id` through as `advisoryId` (a `MAL-*` id is
-   auto-detected as malware and forces `tier: "remove-now"` even if you
-   don't separately know it's malware) and set `findingType: "malware"`
-   explicitly whenever the finding is otherwise identifiable as a confirmed
-   malicious package, not just a vulnerability. Deduplicate identical
+   `vulnerabilities[]` array (diff) or `targetVulnerabilities[]` (simulate —
+   per item under `results[]` for a batch call).
+   Pass each finding's `id` through as `advisoryId` (the tool looks it up
+   and auto-detects malware advisories) and set `findingType: "malware"` on
+   every finding whose `isMalware` is true. Deduplicate identical
    `{packageName, cveId}` pairs, then call `prioritize_remediation({
    findings })` once with all of them — even for a single finding, since KEV
    status isn't visible from the raw severity string alone.
@@ -82,9 +82,13 @@ triggers is that package's verdict.
 
 ### FAIL — block the merge
 
-- Any finding — introduced or pre-existing — that `prioritize_remediation`
-  ranks `tier: "remove-now"`, or that carries `findingType: "malware"`, or
-  whose `advisoryId`/finding `id` matches `MAL-*`. This is a confirmed
+- Any finding — introduced or pre-existing — with `isMalware: true`, or
+  that `prioritize_remediation` ranks `tier: "remove-now"`, or that carries
+  `findingType: "malware"`, or whose `advisoryId`/finding `id` matches
+  `MAL-*`; and any `simulate_dependency_upgrade` result with
+  `riskTier: "do-not-upgrade"` (the target is known malware, or npm no
+  longer lists it while OSV still has advisories for it — how npm removes
+  malicious releases). This is a confirmed
   malicious package, not a vulnerability to schedule — it outranks every
   other rule here, including KEV/EPSS, and applies regardless of whether
   the finding is `"introduced"` or pre-existing `"still-vulnerable"`: a
@@ -97,7 +101,8 @@ triggers is that package's verdict.
   `dependency-audit` and `diff_dependencies`'s own description call out —
   a routine-looking bump quietly adding a `postinstall` is the shape of a
   compromised-maintainer attack, and a gate should never let that through
-  as a warning.
+  as a warning. It counts preinstall/install/postinstall only; a new
+  `prepare` alone is a WARN (below), not a FAIL.
 - `sourceIntegrityChanged === true` on any changed/upgraded package (diff
   only — see `resolvedUrl`/`integrity` on that entry for what changed). This
   means the resolved tarball URL or integrity hash changed while the
@@ -105,25 +110,38 @@ triggers is that package's verdict.
   compromised registry mirror, or a hand-edited/tampered lockfile) that a
   version-only read of the diff would report as "no change." Treat this at
   least as seriously as `installScriptIntroduced`.
-- `projectLifecycleChanges.introduced` non-empty (diff only) — a lifecycle
-  key (`preinstall`/`install`/`postinstall`/`prepare`) newly added to the
-  SCANNED PROJECT's own root `package.json`, not a dependency's. This runs
+- `identityMismatch === true` on any package (diff) — the lockfile's
+  tarball is a different package or version than the entry declares
+  (`tarballName`/`tarballVersion` say what really installs).
+- `projectLifecycleChanges.introduced` contains `preinstall`, `install` or
+  `postinstall` (diff only) — a lifecycle key newly added to the SCANNED
+  PROJECT's own root `package.json`, not a dependency's (a newly added root
+  `prepare` alone is a WARN below). This runs
   the moment anyone runs `npm install` on the project itself and is
   invisible to every per-package rule above, since it isn't a package being
   added/changed at all — treat a new root lifecycle script exactly like
   `installScriptIntroduced` on a dependency.
 - Any `vulnerabilityDelta: "introduced"` finding whose `highestSeverity` /
   vulnerability severity is `CRITICAL` or `HIGH` — **regardless of what
-  tier `prioritize_remediation` assigns it.** A PR that actively introduces
-  a CRITICAL vulnerability shouldn't pass just because that CVE isn't
-  trending right now (a low EPSS score, not KEV-listed). So: severity on an
-  *introduced* finding is a hard block on its own; `prioritize_remediation`'s
-  tier is what decides WARN-level ordering below it, not whether this rule
-  fires at all.
+  tier `prioritize_remediation` assigns it.** This was confirmed directly:
+  simulating minimist's 1.2.6→1.2.5 downgrade (which reintroduces the real
+  CRITICAL CVE-2021-44906) and ranking that finding through
+  `prioritize_remediation` returns `tier: "monitor"`, `score: 11.37` —
+  because EPSS's 30-day exploitation probability for that CVE is currently
+  only 4.6% and it isn't KEV-listed. `prioritize_remediation`'s tier
+  answers "what should I work through first across my whole backlog,"
+  which is the right question for a fix-priority ranking but the wrong one
+  for merge admission control — a PR that actively introduces a CRITICAL
+  vulnerability shouldn't pass just because that CVE isn't trending right
+  now. So: severity on an *introduced* finding is a hard block on its own;
+  `prioritize_remediation`'s tier is what decides WARN-level ordering
+  below it, not whether this rule fires at all.
 - Any finding — introduced or pre-existing — that `prioritize_remediation`
   ranks `tier: "patch-now"` (CISA KEV-listed, confirmed active
   exploitation). This fires even at MEDIUM/LOW severity, same as that tool
   documents: active exploitation overrides severity.
+- An override change that lets a bad version in, per the
+  [override rule](#override-changes) below.
 
 ### WARN — pass, but flag for human review
 
@@ -143,12 +161,19 @@ triggers is that package's verdict.
 - `engineChange.tightened === true` (simulate only) — the target version
   now requires a newer Node than the current one supports.
 - `targetIsPrerelease === true` (simulate only).
+- A `prepare` newly present in `installScriptKeysIntroduced` (either tool)
+  or `projectLifecycleChanges.introduced` (diff) with no other new lifecycle
+  key — npm never runs a dependency's `prepare` on install, but a reviewer
+  should still see it; a project's own new `prepare` runs on every local
+  `npm install`.
 - Any unresolved side: `resolutionNote` set (diff) or
-  `currentVersionNote`/`targetVersionNote` set (simulate) — e.g. a
+  `currentVersionNote`/`targetVersionNote` or a batch item's `fetchError`
+  set (simulate) — e.g. a
   git/workspace/file specifier, or a target range with no satisfying
   published version. Never treat unresolved as PASS; it means the gate
   couldn't actually check anything for that entry.
-- `changeType === "downgrade"` with no vulnerability reintroduced — still
+- `changeType === "downgrade"` (diff) or `direction === "downgrade"`
+  (simulate) with no vulnerability reintroduced — still
   worth a reviewer's eyes; a PR that quietly lowers a dependency version
   for no stated reason is unusual enough to flag.
 - `projectLifecycleChanges.changed` non-empty (diff only) — an EXISTING root
@@ -156,13 +181,39 @@ triggers is that package's verdict.
   rule above for that case). Could be a legitimate build-tooling update, but
   the project's own install-time command changing is always worth a
   reviewer's eyes.
-- `overridesChanges` non-empty (diff only, any of introduced/removed/
-  changed) — `overrides`/`resolutions`/`pnpm.overrides` force a specific
-  version onto a transitive dependency, often to pin past a known
-  vulnerability; a PR that quietly weakens, removes, or changes one can be
-  an attacker forcing a compromised version back in just as easily as
-  routine cleanup. Name exactly which package's override changed and how in
-  the reason — don't just say "overrides changed."
+- Any `overridesChanges` entry the [override rule](#override-changes)
+  doesn't escalate to FAIL.
+
+### Override changes
+
+`overridesChanges` (diff of `package.json`, any of introduced/removed/
+changed) — `overrides`/`resolutions`/`pnpm.overrides` force a version onto
+a transitive dependency, usually to pin past a known vulnerability, so a PR
+that removes or changes one can let a vulnerable or malicious version back
+in. Decide each entry with these fixed steps, in order, so the verdict
+never depends on improvising:
+
+1. Find the version that will now install for that package:
+   - **introduced/changed override whose new value is an exact version** —
+     that version.
+   - **removed override, or a range as the new value** — the package's
+     `afterVersion` in the lockfile diff (input shape 1, second call). If no
+     lockfile diff is available, the version is unknown.
+2. If the version is known, call `query_vulnerabilities({ name, version })`
+   once for it (batch several with `batch_query_vulnerabilities`).
+3. Verdict:
+   - **FAIL** — the version has an `isMalware` finding or a CRITICAL/HIGH
+     finding.
+   - **WARN** — every other case: only MODERATE/LOW findings, clean, or
+     unknown (no lockfile diff, `vulnerabilityCheckFailed`, an error, or a
+     rate limit). A clean result is still a WARN — a safety pin was removed
+     or changed, and a reviewer should see it.
+4. Never PASS an override change, never retry a failed check (one attempt,
+   then WARN), and always give the reason: which package, the before →
+   after override value, the version that will install, and the finding
+   ids — or, when unknown, why (e.g. `overrides.minimist removed; could not
+   verify the version now installed (no lockfile diff) — include the
+   lockfile to verify`).
 
 ### PASS
 
@@ -196,8 +247,9 @@ Checked N package(s), M flagged.
   the response — never let the table show a FAIL-tier row while the top
   line says PASS.
 - Every row's "Reason" cites the specific field that triggered it (exact
-  CVE/GHSA id and severity, `"installScriptIntroduced"`,
-  `"sourceIntegrityChanged"`, `"overridesChanges"`, "major semver bump,"
+  CVE/GHSA id and severity, `"isMalware"`, `"do-not-upgrade"`,
+  `"installScriptIntroduced"`, `"sourceIntegrityChanged"`,
+  `"identityMismatch"`, `"overridesChanges"`, "major semver bump,"
   etc.) — never a bare "flagged," and never fold multiple reasons
   for the same package into a vague summary when the row has more than
   one; list them.
@@ -235,14 +287,10 @@ Checked N package(s), M flagged.
 - Do not run both `diff_dependencies` and `simulate_dependency_upgrade` on
   the same package in the same request "just in case" — route per the
   input-shape table once.
-- Do not call `simulate_dependency_upgrade` once per package when more than
-  one named bump is being gated in the same request — use its `packages`
-  batch input in one call instead.
+- Do not call `simulate_dependency_upgrade` once per package when several
+  bumps were named — batch them into one call's `packages` array.
 - Do not silently cap a >100-package batch of named bumps without saying
   which ones were skipped.
-- Do not drop a `fetchError` batch entry from the "all packages checked"
-  table — it gets its own row with verdict WARN, same as any other
-  unresolved entry.
 - Do not add a conversational summary, caveats paragraph, or follow-up
   question after the output contract — the structured verdict is the
   entire deliverable. If something is genuinely too ambiguous to gate
@@ -255,12 +303,17 @@ Checked N package(s), M flagged.
   enforcement action.
 - Do not silently drop an unresolved entry into the PASS bucket — every
   unresolved side is a WARN with the resolution note as its reason, per
-  the Gate policy above.
+  the Gate policy above. That includes a batch entry with `fetchError`.
+- Do not look anything up beyond what the Gate policy names. An extra
+  lookup outside the written rules is what made the same override fixture
+  FAIL on one run and WARN on the next; the override rule is the only place
+  a follow-up query is part of the policy.
+- Do not FAIL a dependency bump whose only new lifecycle key is `prepare`.
 
 ## Tools used
 
-`diff_dependencies`, `simulate_dependency_upgrade`, `prioritize_remediation`
+`diff_dependencies`, `simulate_dependency_upgrade`, `prioritize_remediation`,
+`query_vulnerabilities`/`batch_query_vulnerabilities` (override rule only)
 — all provided by the `npmscan` MCP server bundled with this plugin
-(`.mcp.json`). See
-[references/test-prompts.md](references/test-prompts.md) for prompts to
-manually verify this skill after installing or editing it.
+(`.mcp.json`). See [references/test-prompts.md](references/test-prompts.md)
+for prompts to manually verify this skill after installing or editing it.
