@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- README brought up to date with the server's 3.1.0 tools: malware
+  detection (`isMalware`, removed-for-malware versions), `do-not-upgrade`,
+  `identityMismatch`, repo-audit coverage, `limit` on the maintainer tools,
+  the three advisory feeds, and the `prepare` rule. Says where to edit the
+  skills (the main repo's `mcp/skills/`, synced here), and fixes the "Try
+  it" example to a chalk version that exists (5.6.1, the compromised one).
+
 ## 3.1.0
 
 Skills are now generated from the npmscan server repo's `mcp/skills/`
