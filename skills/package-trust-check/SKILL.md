@@ -71,7 +71,11 @@ investigation — use the `new-dependency-evaluation` skill.
    materially worse finding than a single-package maintainer change, and
    this is a single-package investigation's best chance to catch that
    before the user asks about the next affected package separately. A large
-   `totalPackagesFound` alone is not a red flag; only a tight cluster is.
+   `totalPackagesFound` alone is not a red flag; only a tight cluster is. A
+   cluster note starting "Discounted:" means it's at least 30 days old and
+   OSV.dev lists no malware for its versions — a past burst that stayed
+   clean, not a current threat; one naming a malware advisory is the
+   opposite.
 4. Call `check_package_provenance({ name, version })`. Three checks in one
    call: does the Sigstore build attestation's source repo/commit match
    `package.json`'s declared repository; is this version missing provenance

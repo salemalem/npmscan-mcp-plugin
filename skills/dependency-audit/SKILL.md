@@ -49,8 +49,9 @@ Accept dependency name+version pairs from:
   4, 6, and 8 below (vulnerability, install-script signal, license
   compliance, and — for whatever it flagged as critical/high severity, a
   possible typosquat, or deprecated — the `check_maintainer_changes`/
-  `check_package_provenance` ownership checks too, up to 5 packages per call,
-  prioritized the same way step 6 already ranks them) in one call, replacing
+  `check_package_provenance` ownership checks too, up to 5 packages per call
+  — one slot per package, so several versions of one package share its
+  result — prioritized the same way step 6 already ranks them) in one call, replacing
   that part of the flow below. Read `coverage` and the summary first: every
   lockfile entry is checked for vulnerabilities, but only 100 packages
   (vulnerable ones first) get the license/install-script detail, and a
@@ -101,9 +102,10 @@ than guessing at what to audit.
    fixed version — do not call `query_vulnerabilities` again per flagged
    package just to re-fetch detail you already have. The only exception:
    if the result has an `enrichmentNote` (a very large audit crossed the
-   enrichment cap), the vulnerabilities it names are ID-only — call
-   `query_vulnerabilities` on those *specific* packages if the user needs
-   full detail on them. Each result also carries `signals` (`deprecated`,
+   enrichment cap, or some advisory details couldn't be fetched), the
+   vulnerabilities it names are ID-only — their severity and malware status
+   are unverified, so don't call those packages safe or non-malicious; call
+   `query_vulnerabilities` on those *specific* packages for full detail. Each result also carries `signals` (`deprecated`,
    `hasInstallScripts`, `popularityTier`/`maintenanceTier`,
    `possibleTyposquatOf`) directly — a clean `vulnerabilityCount: 0` with a
    flagged `signals` entry is NOT clean, and `signals` is `null` (not "the
@@ -171,6 +173,9 @@ than guessing at what to audit.
      window of each other, the compromised-account shape behind the 2025
      chalk/debug ("qix") incident (~18 packages within ~2 hours). A large
      total package count alone is not a red flag; only a tight cluster is.
+     A cluster note starting "Discounted:" means it's at least 30 days old
+     and OSV.dev lists no malware for its versions — report it as a past
+     burst that stayed clean, not a current threat.
    - `check_package_provenance` — checks npm's Sigstore publish provenance
      against reality: does the attested source repo/commit match
      `package.json`'s declared repository, is this package missing

@@ -1,7 +1,19 @@
 # Changelog
 
-## Unreleased
+## 3.1.2
 
+Follows the server's 3.1.1 and 3.1.2 releases (this plugin skipped 3.1.1):
+
+- `dependency-audit`: `audit_github_repository` gives each package one
+  ownership-check slot, so several versions of one package share its result.
+  An `enrichmentNote` now also covers advisories whose details couldn't be
+  fetched — their severity and malware status are unverified, so those
+  packages aren't called safe. A blast-radius cluster note starting
+  "Discounted:" is a past burst that stayed clean, not a current threat.
+- `package-trust-check`: same "Discounted:" guidance for
+  `check_maintainer_blast_radius`.
+- README: the blast-radius "clean since" discount and the audit's
+  per-package ownership slots.
 - README brought up to date with the server's 3.1.0 tools: malware
   detection (`isMalware`, removed-for-malware versions), `do-not-upgrade`,
   `identityMismatch`, repo-audit coverage, `limit` on the maintainer tools,
