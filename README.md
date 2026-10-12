@@ -4,12 +4,16 @@ A [Claude Code plugin](https://code.claude.com/docs/en/plugins) that gives
 Claude read-only npm package and vulnerability lookups, backed by
 [npmscan.com](https://npmscan.com)'s free, unauthenticated MCP server.
 
-## Direct links
+NPMScan is also officially listed for both ChatGPT and Claude on
+[npmscan.com's MCP page](https://npmscan.com/mcp), so users can verify that
+this plugin points at the same public service.
 
-- **Claude** (Anthropic plugin directory):
+## Official listings
+
+- **Claude** (Anthropic's official Claude directory):
   [claude.ai/customize/skills/…/npmscan](https://claude.ai/customize/skills/id/aa8fcafe-0bcd-41b6-9e07-6c7ebbb71153%40anthropic-plugin-directory)
-- **ChatGPT** (OpenAI plugins directory):
-  [chatgpt.com/plugins/…/npmscan](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2)
+- **ChatGPT** (install npmscan as an app for one-click setup):
+  [chatgpt.com/plugins/…/npmscan](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2?q=npm)
 - **Setup docs for other clients**: [npmscan.com/mcp](https://npmscan.com/mcp)
 
 ## What it adds
@@ -203,7 +207,7 @@ prompts in each skill's `references/test-prompts.md`.
 ## Submitting to a marketplace
 
 NPMScan is already listed in Anthropic's plugin directory (see
-[Direct links](#direct-links)). The values used for that submission form
+[Official listings](#official-listings)). The values used for that submission form
 are in [SUBMISSION.md](SUBMISSION.md); update them there when the plugin
 changes.
 
@@ -253,8 +257,8 @@ Claude Code auto-loads those too.
 
 The same `npmscan` MCP server and the same `dependency-audit` /
 `package-trust-check` / `new-dependency-evaluation` / `incident-response` /
-`ci-pr-gate` skills are also available in OpenAI's
-[ChatGPT Plugins directory](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2)
+`ci-pr-gate` skills are also available in ChatGPT via the official
+[npmscan app listing](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2?q=npm)
 (submission artifacts live in the main [npmscan](https://npmscan.com) app
 repo, under `mcp/`).
 
