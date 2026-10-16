@@ -16,6 +16,12 @@ this plugin points at the same public service.
   [chatgpt.com/plugins/…/npmscan](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2?q=npm)
 - **Setup docs for other clients**: [npmscan.com/mcp](https://npmscan.com/mcp)
 
+Pending:
+
+- **Grok Build** (xAI's official plugin marketplace): submitted in
+  [xai-org/plugin-marketplace#1506](https://github.com/xai-org/plugin-marketplace/pull/1506),
+  awaiting xAI review. See [Using it with Grok Build](#using-it-with-grok-build).
+
 ## What it adds
 
 - **MCP server** (`npmscan`, `https://npmscan.com/api/mcp`) with
@@ -252,6 +258,26 @@ Test results and marketplace submission steps: [KIMI.md](KIMI.md).
 When editing, keep Kimi-only settings inside `kimi.plugin.json`. Don't add
 root-level `commands/`, `agents/`, or `hooks/` directories for Kimi, because
 Claude Code auto-loads those too.
+
+## Using it with Grok Build
+
+Grok Build reads this repo as-is (`.claude-plugin/plugin.json`, `.mcp.json`
+and `skills/`), so it needs no Grok-specific manifest.
+
+- **Status**: submitted to xAI's official marketplace in
+  [xai-org/plugin-marketplace#1506](https://github.com/xai-org/plugin-marketplace/pull/1506)
+  as a remote source pinned to commit `5cbf977` (v3.1.2). It's waiting for
+  xAI to approve the CI run and do a code-owner review. The source stays on
+  this personal-account repo rather than the NPMscan org, so the Claude and
+  ChatGPT listings don't have to move.
+- **After merge**: install with `/marketplace` or
+  `grok plugin install npmscan` inside Grok Build.
+- **Updating**: Grok Build installs the pinned commit only. To ship a new
+  release, open a PR to `xai-org/plugin-marketplace` that bumps the `sha` of
+  the `npmscan` entry in `.grok-plugin/marketplace.json`, then run
+  `python3 scripts/generate-plugin-index.py`, `scripts/validate-catalog.py`
+  and `scripts/generate-plugin-index.py --check` there. The index script
+  fetches every plugin in the catalog and takes several minutes.
 
 ## Also available for other AI clients
 
