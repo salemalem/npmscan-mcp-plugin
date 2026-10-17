@@ -26,7 +26,7 @@ Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
 | Perplexity | ⏳ Email sent to `connectors@perplexity.ai` 2026-10-17; proposal form still to fill | [form](https://pplx.ai/connector-form-submission) |
 | Mistral Le Chat | 📧 Business development only | see below |
 | Docker MCP Catalog | ⏳ PR open 2026-10-17 as a long shot (queue stalled) | [docker/mcp-registry#5808](https://github.com/docker/mcp-registry/pull/5808) |
-| Factory (Droid) | ✅ Self-install tested and documented in README (no listing route) | [section](#factory-droid) |
+| Factory (Droid) | ✅ Self-install works (README); ⏳ long-shot PR to the official marketplace | [Factory-AI/factory-plugins#60](https://github.com/Factory-AI/factory-plugins/pull/60) |
 | Zed | ✅ Nothing to submit: Zed is moving to the official MCP Registry; add a README snippet | [section](#zed) |
 | Windsurf (now Devin Desktop) | 🔜 No submission route; add a README snippet | [section](#windsurf-now-devin-desktop) |
 
@@ -286,7 +286,11 @@ There are two separate routes:
   ```
 - [x] Test those two commands with Droid in a throwaway home directory (passed; see "Test result" above).
 - [x] Add a "Using it with Factory (Droid)" README section.
-- [ ] Optional: a long-shot PR to `Factory-AI/factory-plugins`. Odds: zero outside merges so far, out of 32 total.
+- [x] Long-shot PR to the official marketplace: [Factory-AI/factory-plugins#60](https://github.com/Factory-AI/factory-plugins/pull/60), opened 2026-10-17. Odds: zero outside merges so far, out of 32 total.
+  - **Format:** one `.factory-plugin/marketplace.json` entry (`source: {source: "url", url: …npmscan-mcp-plugin.git, sha: e83bfb4…}`, category `security`, homepage the docs) plus a README section, matching SonarQube's open PR #58. Fork `salemalem/factory-plugins`, branch `add-npmscan`, commit `f01a19a`.
+  - **Tested before opening:** the edited marketplace, added locally to Droid 0.244.0, installs npmscan; `droid mcp list` shows connected; all 5 skills load. A separate test confirmed Droid supports pinned `url` sources.
+  - **Note:** the repo's default branch is `master`, not `main`.
+  - [ ] Watch #60. If it ever merges, future releases need a PR that bumps the `sha`.
 
 ### Zed
 
