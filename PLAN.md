@@ -25,7 +25,10 @@ Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
 | Cline (old MCP Marketplace) | ⏳ Issue open 2026-10-17; slow queue | [cline/mcp-marketplace#3063](https://github.com/cline/mcp-marketplace/issues/3063) |
 | Perplexity | ⏳ Email sent to `connectors@perplexity.ai` 2026-10-17; proposal form still to fill | [form](https://pplx.ai/connector-form-submission) |
 | Mistral Le Chat | 📧 Business development only | see below |
-| Docker MCP Catalog, Factory, Zed, Windsurf | ❌ Skip for now | see below |
+| Docker MCP Catalog | ⏳ PR open 2026-10-17 as a long shot (queue stalled) | [docker/mcp-registry#5808](https://github.com/docker/mcp-registry/pull/5808) |
+| Factory (Droid) | 🔜 No listing route; document self-install (repo already compatible) | [section](#factory-droid) |
+| Zed | ✅ Nothing to submit: Zed is moving to the official MCP Registry; add a README snippet | [section](#zed) |
+| Windsurf (now Devin Desktop) | 🔜 No submission route; add a README snippet | [section](#windsurf-now-devin-desktop) |
 
 ## Next steps
 
@@ -235,10 +238,74 @@ There are two separate routes:
 
 - The curated connectors directory goes through Mistral's business-development team. Admins can still add any remote MCP server by URL.
 
-### Skipped
+### Docker MCP Catalog
 
-- **Docker MCP Catalog** ([docker/mcp-registry](https://github.com/docker/mcp-registry)): supports hosted servers (`server.yaml`, `tools.json`, `readme.md`), but about 1,850 PRs are open and only one merged since September.
-- **Factory (Droid)** ([factory-plugins](https://github.com/Factory-AI/factory-plugins)): no third-party PR has been merged.
-- **Zed:** needs a Rust extension; not worth it for the reach.
-- **Windsurf:** no submission process found.
-- **`punkpeye/awesome-mcp-servers`:** now for local servers only; hosted servers go in `awesome-remote-mcp-servers`, where npmscan is already listed.
+**Status: ⏳ PR open as a long shot:** [docker/mcp-registry#5808](https://github.com/docker/mcp-registry/pull/5808), opened 2026-10-17. The analysis below said to park it; we submitted anyway for the extra footprint, knowing the queue is stalled.
+
+**What we submitted:** `servers/npmscan/` on fork `salemalem/mcp-registry`, branch `add-npmscan`, commit `235ac6a`:
+- `server.yaml`: `type: remote`, category `security` (as Semgrep uses), title `NPMScan`, `transport_type: streamable-http`, url `https://npmscan.com/api/mcp`, no OAuth; the icon is `assets/logo-400.png` via raw GitHub (400×400; the limit is 512)
+- `tools.json`: `[]`
+- `readme.md`: the docs link
+
+**Checks:** `npx prettier --check` passes. The `cmd/validate` rules were checked by hand (no Go installed here): the name matches the folder; the title has no "MCP" or "Server" and is capitalized; the transport is allowed; the icon is under 512px. The PR body uses their template, with the Docker-image items marked "not applicable" for a remote server.
+
+- **Route:** a PR to [docker/mcp-registry](https://github.com/docker/mcp-registry) adding `servers/npmscan/` with three files:
+  - `server.yaml` (`type: remote`, `remote.transport_type: streamable-http`, `remote.url: https://npmscan.com/api/mcp`, no `oauth`)
+  - `tools.json` (`[]` for remote servers)
+  - `readme.md` (a docs link)
+
+  `task remote-wizard` generates them. It would take about 20 minutes.
+- **Queue health:**
+  - 1,855 open PRs.
+  - Since 2026-09-01, only **one** PR merged, a bot updating an existing entry's commit pin.
+  - Of the 10 human-authored merges since May, all updated *existing* vendors' entries (CircleCI, Temporal, Okta, Arm); none of the last 60 merged PRs adds a new server.
+- **What submitters say:**
+  - "[MCP server pending review for ever](https://github.com/docker/mcp-registry/issues/178)" (2025)
+  - "[When can we expect our PR to be merged?](https://github.com/docker/mcp-registry/issues/323)" (2025)
+  - InterSystems opened a [follow-up issue](https://github.com/docker/mcp-registry/issues/5704) on 2026-10-14 about its stuck PR, so even big vendors wait.
+- **Covered indirectly:** Docker's CLI can build a catalog from the official MCP Registry (registry.modelcontextprotocol.io), where npmscan is listed.
+- **Original decision:** park it. Overridden 2026-10-17: submit anyway, since a cheap PR beats an empty slot.
+- [ ] Watch #5808. CI and Docker's review may need a maintainer to start them, because this is a first-time contributor. Answer any review comments on the same branch.
+- [ ] If there's still no movement after a few months, leave it open; don't open duplicates or "any update?" issues, which the backlog is already full of.
+
+### Factory (Droid)
+
+**Status: 🔜 no listing route; document self-install** (analysed 2026-10-17).
+
+- **Official marketplace** ([Factory-AI/factory-plugins](https://github.com/Factory-AI/factory-plugins)): the README says "fork, add under `plugins/`, update marketplace.json, PR". But **no third-party PR has ever merged**: 32 merges, all by Factory staff or bots. 14 outside PRs are open, including Firecrawl and SonarQube, and the [docs](https://docs.factory.com/cli/configuration/plugins) describe no listing process.
+- **The useful route:** Droid installs any GitHub marketplace, and it **translates Claude Code layouts** (`.claude-plugin/` becomes `.factory-plugin/`, and `.mcp.json` becomes `mcp.json`). This repo already has `.claude-plugin/marketplace.json` (marketplace name `npmscan`), so this should work today:
+  ```bash
+  droid plugin marketplace add salemalem/npmscan-mcp-plugin
+  droid plugin install npmscan@npmscan --scope user
+  ```
+- [ ] Test those two commands with Droid in a throwaway home directory. Droid installs via its own script, so read that first.
+- [ ] If it works, add a "Using it with Factory (Droid)" README section.
+- [ ] Optional: a PR to `factory-plugins` as a long shot. Only if a third-party PR merges first.
+
+### Zed
+
+**Status: ✅ nothing to submit; add a README snippet** (analysed 2026-10-17).
+
+- Zed connects to remote servers natively: Settings → AI → MCP Servers → Add Remote Server, or `context_servers` with a `url` ([docs](https://zed.dev/docs/ai/mcp)). No extension is needed.
+- Zed's MCP *extensions* only support servers shipped as binaries or npm packages, not hosted ones. Zed says it **plans to deprecate MCP extensions in favor of the official MCP Registry** ([docs](https://zed.dev/docs/extensions/mcp-extensions)), and npmscan is already there.
+- [ ] Add a "Using it with Zed" README section:
+  ```json
+  { "context_servers": { "npmscan": { "url": "https://npmscan.com/api/mcp" } } }
+  ```
+
+### Windsurf (now Devin Desktop)
+
+**Status: 🔜 no submission route; add a README snippet** (analysed 2026-10-17). Cognition renamed Windsurf to Devin Desktop.
+
+- The docs moved to [docs.devin.ai](https://docs.devin.ai/desktop/cascade/mcp), which says: "Cascade does not have an MCP Marketplace or one-click install."
+- Only the "Devin Local" agent has a marketplace. Its default source isn't documented, and no submission process is published. Team admins can add custom registries, which "must follow the official MCP registry schema".
+- Cascade servers are added by hand in `mcp_config.json`, using `serverUrl` for remote HTTP servers.
+- [ ] Add a "Using it with Windsurf / Devin Desktop" README section:
+  ```json
+  { "mcpServers": { "npmscan": { "serverUrl": "https://npmscan.com/api/mcp" } } }
+  ```
+- [ ] Later, if a contact turns up: ask Cognition where the Devin Local marketplace sources its servers. If it's the official MCP Registry, we're already covered.
+
+### awesome-mcp-servers (punkpeye)
+
+**Status: ✅ nothing to do.** The list is now for local servers only. Hosted servers go in `awesome-remote-mcp-servers`, where npmscan is already listed.
