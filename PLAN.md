@@ -21,8 +21,9 @@ Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
 | awesome-codex-plugins | 🔜 Next. Needs a manifest and `SECURITY.md`. | [repo](https://github.com/hashgraph-online/awesome-codex-plugins) |
 | Gemini CLI gallery | ⏳ Shipped 2026-10-18 (`0b29cac`, topic added, GitHub install verified); waiting for the daily crawl | [docs](https://geminicli.com/docs/extensions/releasing/) |
 | Antigravity (Google) | 🟡 Interest form only; root `plugin.json` conflict to resolve first | [form](https://forms.gle/2EX5RFYPoJe1UgxR9) |
-| Cline MCP Marketplace | 🟡 Optional, slow queue | [repo](https://github.com/cline/mcp-marketplace) |
-| Perplexity | 📧 Email only | see below |
+| Cline (new catalog) | ⏳ PR open 2026-10-17; validator passes | [cline/marketplace#262](https://github.com/cline/marketplace/pull/262) |
+| Cline (old MCP Marketplace) | ⏳ Issue open 2026-10-17; slow queue | [cline/mcp-marketplace#3063](https://github.com/cline/mcp-marketplace/issues/3063) |
+| Perplexity | ⏳ Email sent to `connectors@perplexity.ai` 2026-10-17; proposal form still to fill | [form](https://pplx.ai/connector-form-submission) |
 | Mistral Le Chat | 📧 Business development only | see below |
 | Docker MCP Catalog, Factory, Zed, Windsurf | ❌ Skip for now | see below |
 
@@ -53,14 +54,16 @@ Still to do, for Cursor, Kiro and the Codex list:
 - [ ] **Kiro:** submit at [kiro.dev/powers/submit](https://kiro.dev/powers/submit/).
 - [ ] **Codex list:** run their scanner, then open a one-line README PR to `hashgraph-online/awesome-codex-plugins`.
 - [x] **Gemini CLI:** nothing to submit; shipped and verified (see the Gemini CLI section).
-- [ ] **Cline (optional):** open an issue with the repo link and a 400×400 PNG logo.
-- [ ] **Perplexity:** email `api@perplexity.ai` about a managed connector.
+- [x] **Cline:** PR [cline/marketplace#262](https://github.com/cline/marketplace/pull/262) (new catalog) and issue [cline/mcp-marketplace#3063](https://github.com/cline/mcp-marketplace/issues/3063) (old marketplace), both 2026-10-17.
+- [x] **Perplexity email:** sent to `connectors@perplexity.ai` on 2026-10-17.
+- [ ] **Perplexity form:** fill in the [proposal form](https://pplx.ai/connector-form-submission) (needs a Google sign-in; answers are in the Perplexity section).
 
 ### Ongoing
 
 - [ ] Watch [#1506](https://github.com/xai-org/plugin-marketplace/pull/1506) and the xAI form reply. Answer review comments.
 - [ ] Watch [#5142](https://github.com/github/awesome-copilot/issues/5142) for a maintainer's `/approve` or `/reject`.
 - [ ] Around 2026-10-19/20, search "npmscan" on [geminicli.com/extensions](https://geminicli.com/extensions/).
+- [ ] Watch for a reply from `connectors@perplexity.ai`. They reply only if it's a fit and publish no timeline. If there's nothing after about 2 weeks, send one short follow-up in the same thread.
 - [ ] Each Grok Build update needs a new PR to `xai-org/plugin-marketplace` that bumps the pinned commit, then runs `python3 scripts/generate-plugin-index.py`, `scripts/validate-catalog.py` and `scripts/generate-plugin-index.py --check`. The index script fetches every plugin in the catalog and takes several minutes.
 - [ ] When something is listed, move it to "Official listings" in [README.md](README.md) and update the table above.
 
@@ -164,14 +167,69 @@ Not started; it needs a decision first.
 
 ### Cline
 
-- **Route:** a GitHub issue with the repo link, a 400×400 PNG logo and a reason for adding it. Check first that Cline can install the server from the README alone.
-- About 2,700 issues are open, so expect a slow queue.
+**Status: ⏳ submitted to both catalogs on 2026-10-17.** Both are slow; that was expected going in.
 
-### Perplexity (no public route)
+There are two separate routes:
 
-- There's no submission form; a [forum question](https://community.perplexity.ai/t/how-do-we-submit-our-mcp-server-so-it-shows-up-in-the-connectors-database-officially-not-as-a-custom-connector/6043) about it went unanswered.
-- Partners such as MT Newswires got in through partnerships. The [Agent API docs](https://docs.perplexity.ai/docs/agent-api/tools/connectors) say to email `api@perplexity.ai` to request a managed connector.
-- Meanwhile, users can add npmscan as a [custom remote connector](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors).
+1. **New catalog, [`cline/marketplace`](https://github.com/cline/marketplace)** (started June 2026): one folder per entry, `registry/mcps/<id>/entry.json` plus an icon, opened as a PR. It drives `cline mcp install` one-liners.
+   - **Ours:** [PR #262](https://github.com/cline/marketplace/pull/262), branch `add-npmscan-mcp` on the fork `salemalem/marketplace`. Tags `security` and `software`, icon is `icon.png` (400×400), `install.args` = `npmscan --transport http https://npmscan.com/api/mcp`, `verified: false` (only Cline sets that).
+   - `npm run validate` (`node scripts/generate.mjs --check`) passed: "204 entries".
+   - **Queue:** only 8 PRs merged, all by Cline's founder (saoudrizwan); no community PR merged yet; about 234 open. Authors from the old repo have been closing their issues and moving here.
+2. **Old MCP Marketplace, [`cline/mcp-marketplace`](https://github.com/cline/mcp-marketplace):** an issue-form submission with the repo URL, a 400×400 PNG and two checkboxes.
+   - **Ours:** [issue #3063](https://github.com/cline/mcp-marketplace/issues/3063), logo at `assets/logo-400.png` (raw GitHub URL). It's opened via `gh`, so it lacks the `server-submission` label, which non-collaborators can't set.
+   - **Queue:** about 2,700 open issues; recent ones get no maintainer replies. The README says "a couple of days", which isn't what happens in practice.
+
+**What was added to this repo** (`3b9982f`):
+- `llms-install.md`, the setup steps Cline's one-click installer reads
+- a "Using it with Cline" section in the README
+- `assets/logo-400.png`: the light npmscan mark on the dark brand tile (#0A0A0C, the same as `icon.png`). The site's own logos are transparent and would vanish on dark themes.
+
+**Tested:** Cline CLI 3.0.73 `cline mcp install npmscan --transport http https://npmscan.com/api/mcp --yes` gives `status: installed` with transport `streamableHttp`; an MCP `initialize` + `tools/list` returns 23 tools. Not tested: the VS Code extension's agent reading the README. The issue's "tested with README" checkbox is ticked, and the notes say exactly what was tested.
+
+**Config shape:** Cline's docs use top-level `"type": "streamableHttp"` and `"url"`. The CLI itself saves a nested `transport` object, but the README follows the docs.
+
+**Next:**
+- [ ] Watch PR #262 and issue #3063. If a maintainer asks for changes on #262, push to the same branch.
+- [ ] If neither moves in about a month, ask in Cline's [Discord](https://discord.gg/cline) `#mcp` channel, which the old repo's README names as the help channel.
+
+### Perplexity
+
+**Status: ⏳ email sent, waiting for a reply.** Sent 2026-10-17 19:37 UTC from shyngys@blockhacks.io to `connectors@perplexity.ai`, subject "Connector proposal: NPMScan (npm supply-chain security, remote MCP)". Next: fill in the proposal form with the answers below.
+
+**Proposal form answers:**
+
+| Field | Answer |
+|---|---|
+| Company name and website | BlockHacks.io / NPMScan, https://npmscan.com |
+| Product to connect | NPMScan MCP server, `https://npmscan.com/api/mcp` (streamable HTTP) |
+| Connector description | Checks npm packages for malware, known vulnerabilities, typosquats, maintainer takeovers and risky install scripts; audits package.json, lockfiles, SBOMs and GitHub repos. 23 read-only tools, no OAuth or API key. |
+| Customer problem | Users ask Perplexity whether a package is compromised, but web search lags behind fresh supply-chain incidents. NPMScan gives a live answer before anything is recommended or installed. |
+| Docs links | https://npmscan.com/docs/mcp, https://npmscan.com/privacy, https://github.com/salemalem/npmscan-mcp-plugin |
+| Contact | Shyngys Shynbolatov, shyngys@blockhacks.io |
+
+**The official route** is the help article [Submit a Connector Proposal](https://www.perplexity.ai/help-center/en/articles/2026092501-submit-a-connector-proposal), published around 2026-09-25:
+- **Proposal form:** [pplx.ai/connector-form-submission](https://pplx.ai/connector-form-submission), a Google Form that needs a Google sign-in. It's for "representatives of a company that would like to explore building a connector", one connector per proposal. It asks for:
+  - company name and website
+  - the product to connect
+  - a short connector description
+  - the customer problem or use case
+  - links to API, developer or security docs
+  - a partnership and technical contact
+- **Email:** `connectors@perplexity.ai` (the "Plugins marketplace team"). They suggest emailing first with the company name, a short description and technical doc links.
+- **After submitting:** the team contacts you only if it's a potential fit, and there's no guarantee. They judge customer value, technical feasibility, security requirements and product priorities. No timeline is published.
+- `api@perplexity.ai` is a different channel: requests for the developer Agent API's small catalog (GitHub, Slack, Drive, Datadog, Linear, Notion). It's not the consumer connector directory.
+
+**What others have experienced:**
+- No firsthand reports of the proposal process were found.
+- A [forum question](https://community.perplexity.ai/t/how-do-we-submit-our-mcp-server-so-it-shows-up-in-the-connectors-database-officially-not-as-a-custom-connector/6043) from 2026-09-08 asking how to get listed got no answer. The help article appeared about two weeks later.
+- 2026 partner launches are established companies with announced partnerships, mostly finance, data and sales tools that Perplexity Computer users would use: [Quartr](https://quartr.com/newsroom/press-release/quartr-is-now-available-in-perplexity-via-mcp), [MT Newswires](https://www.mtnewswires.com/news/mt-newswires-mcp-server-now-available-in-perplexity-computer-bringing-real-time-global-market-news-to-ai-driven-workflows), [Octus](https://octus.com/company/news/octus-credit-intelligence-now-inside-perplexity/), [Apollo.io](https://www.prnewswire.com/news-releases/apolloio-brings-ai-powered-gtm-workflows-to-perplexity-computer-for-growing-businesses-302790469.html), [Similarweb](https://www.similarweb.com/blog/updates/announcements/similarweb-perplexity/) and Rings AI. There's no developer-security connector yet, which is both an opening and a risk: it may not be a product priority.
+
+**Our pitch angle:**
+- Perplexity users already ask "is this package compromised?", and web search lags behind fresh incidents.
+- No OAuth and nothing to store, so the security review should be easy.
+- Already in the Claude, ChatGPT and MCP Registry directories.
+
+**Meanwhile:** users can already add npmscan as a [custom remote connector](https://www.perplexity.ai/help-center/en/articles/13915507-adding-custom-remote-connectors) with the URL `https://npmscan.com/api/mcp`.
 
 ### Mistral Le Chat (no public route)
 
