@@ -21,6 +21,10 @@ Pending:
 - **Grok Build** (xAI's official plugin marketplace): submitted in
   [xai-org/plugin-marketplace#1506](https://github.com/xai-org/plugin-marketplace/pull/1506),
   awaiting xAI review. See [Using it with Grok Build](#using-it-with-grok-build).
+- **GitHub Copilot** (Awesome Copilot marketplace): submitted in
+  [github/awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142).
+- **Gemini CLI** (extension gallery): indexed automatically from this repo. See
+  [Using it with Gemini CLI](#using-it-with-gemini-cli).
 
 ## What it adds
 
@@ -174,6 +178,9 @@ npmscan-mcp-plugin/
 ├── CHANGELOG.md            # what changed in each plugin version
 ├── SUBMISSION.md           # values for the plugin-directory submission form
 ├── LICENSE
+├── .github/plugin/
+│   └── plugin.json         # GitHub Copilot plugin manifest
+├── gemini-extension.json   # Gemini CLI extension manifest
 ├── kimi.plugin.json        # Kimi plugin manifest (ignored by Claude Code)
 ├── icon.png                # Kimi plugin icon (dark tile, npmscan.com branding)
 ├── locales/                # Kimi interface translations (zh-CN)
@@ -278,6 +285,27 @@ and `skills/`), so it needs no Grok-specific manifest.
   `python3 scripts/generate-plugin-index.py`, `scripts/validate-catalog.py`
   and `scripts/generate-plugin-index.py --check` there. The index script
   fetches every plugin in the catalog and takes several minutes.
+
+## Using it with Gemini CLI
+
+This repo is also a [Gemini CLI extension](https://geminicli.com/docs/extensions/):
+[`gemini-extension.json`](gemini-extension.json) declares the same MCP server
+(`httpUrl`, streamable HTTP), and Gemini CLI loads the same five skills from
+`skills/`.
+
+```bash
+gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin
+```
+
+The install follows `main`, so each push offers installed users an update.
+The [extension gallery](https://geminicli.com/extensions/) finds the repo
+by its `gemini-cli-extension` GitHub topic and re-crawls it daily; there's
+nothing to submit. Check a change with
+`gemini extensions validate .` before pushing.
+
+Antigravity CLI users (which replaced Gemini CLI for free and Google AI
+Pro/Ultra accounts) can bring the extension over with
+`agy plugin import gemini` after installing it in Gemini CLI.
 
 ## Also available for other AI clients
 

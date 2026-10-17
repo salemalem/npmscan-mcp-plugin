@@ -1,0 +1,10 @@
+{
+  "name": "npmscan",
+  "version": "3.1.2",
+  "description": "Check npm packages for malware, known vulnerabilities, typosquats, maintainer takeovers and risky install scripts before installing; audit package.json, lockfiles, SBOMs and PR dependency changes. Free, read-only, no API key.",
+  "mcpServers": {
+    "npmscan": {
+      "httpUrl": "https://npmscan.com/api/mcp"
+    }
+  }
+}

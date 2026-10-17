@@ -19,7 +19,8 @@ Last researched: 2026-10-18. Recheck the queue numbers before relying on them.
 | GitHub Copilot (awesome-copilot) | ⏳ Submitted 2026-10-18 (tag `v3.1.2`); waiting for intake gates and maintainer review | [awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142) |
 | Kiro powers | 🔜 Next. Needs a manifest and README additions. | [submit](https://kiro.dev/powers/submit/) |
 | awesome-codex-plugins | 🔜 Next. Needs a manifest and `SECURITY.md`. | [repo](https://github.com/hashgraph-online/awesome-codex-plugins) |
-| Gemini CLI gallery | 🔜 Next. Indexed automatically once the manifest and topic exist. | [docs](https://geminicli.com/docs/extensions/releasing/) |
+| Gemini CLI gallery | 🔜 Next. Manifest drafted and tested locally; see "Gemini CLI" below. | [docs](https://geminicli.com/docs/extensions/releasing/) |
+| Antigravity (Google) | 🟡 Interest form only; root `plugin.json` conflict to resolve first | [form](https://forms.gle/2EX5RFYPoJe1UgxR9) |
 | Cline MCP Marketplace | 🟡 Optional, slow queue | [repo](https://github.com/cline/mcp-marketplace) |
 | Perplexity | 📧 Email only | see below |
 | Mistral Le Chat | 📧 Business development only | see below |
@@ -94,7 +95,55 @@ Most of the 🔜 targets need files this repo doesn't have yet. Each one points 
 
 ### Gemini CLI
 
-- No submission. The gallery crawls public repos daily that have a `gemini-extension.json` at the root and the `gemini-cli-extension` topic.
+Researched and tested on 2026-10-18 with Gemini CLI 0.64.0.
+
+**How listing works:** there's no submission step. The [gallery](https://geminicli.com/extensions/) crawls GitHub daily for public repos that have:
+1. the topic `gemini-cli-extension`
+2. a `gemini-extension.json` at the repository root
+
+A repo appears "if it passes validation". The checks aren't published, but `gemini extensions validate` is the local equivalent. ([docs](https://geminicli.com/docs/extensions/releasing/))
+
+**Who it reaches:** on 2026-06-18 Google moved free, Google AI Pro and Ultra users from Gemini CLI to **Antigravity CLI** ([announcement](https://github.com/google-gemini/gemini-cli/discussions/27274)). Gemini CLI stays for enterprise (Code Assist Standard/Enterprise, Google Cloud) and paid API-key users, and it's still released weekly. Antigravity users can bring Gemini extensions across with `agy plugin import gemini`. So this listing reaches a smaller audience than before, but it's cheap: one file, one README section and one topic.
+
+**The manifest.** This exact file was tested: `gemini extensions validate` passes, the install loads the `npmscan` MCP server (**Connected** to the live endpoint) and all 5 skills from `skills/`.
+
+```json
+{
+  "name": "npmscan",
+  "version": "3.1.2",
+  "description": "Check npm packages for malware, known vulnerabilities, typosquats, maintainer takeovers and risky install scripts before installing; audit package.json, lockfiles, SBOMs and PR dependency changes. Free, read-only, no API key.",
+  "mcpServers": {
+    "npmscan": {
+      "httpUrl": "https://npmscan.com/api/mcp"
+    }
+  }
+}
+```
+
+- `httpUrl` is the field for streamable HTTP. `url` would mean SSE, which is wrong for this server ([MCP config docs](https://geminicli.com/docs/tools/mcp-server/)).
+- Skills need no config: Gemini loads `skills/<name>/SKILL.md` from the extension root, which is the folder that already exists.
+- No `GEMINI.md` is needed; the skills already tell the model when to use npmscan.
+
+**Steps**
+- [ ] Add `gemini-extension.json` (above) at the repo root.
+- [ ] Add a "Using it with Gemini CLI" section to README.md with the install command `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin`, and list it under "Official listings → Pending".
+- [ ] Commit and push to `main`. No GitHub release is needed: git installs track the default branch, and every push offers users an update.
+- [ ] Add repo topics: `gh repo edit salemalem/npmscan-mcp-plugin --add-topic gemini-cli-extension`. While there, add discovery topics too: `mcp`, `mcp-server`, `npm`, `security`, `supply-chain-security`.
+- [ ] Verify from GitHub (not a local copy): install with `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin` into a throwaway `HOME`, then confirm `gemini mcp list` shows **Connected** and all 5 skills are listed.
+- [ ] After about 24 hours, search "npmscan" on [geminicli.com/extensions](https://geminicli.com/extensions/). If it's missing after 2–3 days, rerun `gemini extensions validate` on a fresh clone and ask in [gemini-cli Discussions](https://github.com/google-gemini/gemini-cli/discussions).
+
+**Upkeep:** `version` is now in four manifests: `.claude-plugin/plugin.json`, `kimi.plugin.json`, `.github/plugin/plugin.json` and `gemini-extension.json`. Bump all four together on each release.
+
+### Antigravity (Google, the Gemini CLI replacement)
+
+Not started; it needs a decision first.
+
+- **Official marketplace** (`antigravity-plugins-official`): there's no public submission route, only an [interest form](https://forms.gle/2EX5RFYPoJe1UgxR9) linked from the [Marketplace docs](https://antigravity.google/docs/marketplace).
+- **Direct install** works without a listing: `agy plugin install https://github.com/<owner>/<repo>`. It needs:
+  - a root `plugin.json` holding only `name`, `description` and optionally `$schema`; the docs say no other keys are allowed
+  - an `mcp_config.json` using `serverUrl`, not `url` or `httpUrl`
+  - `skills/`, which already exists
+- **Conflict to resolve first:** Kiro, and the cross-tool "Agent Plugins" format, want a root `plugin.json` that *does* include `version`, `author` and `license`. Both can't share one root file if Antigravity really rejects extra keys. Its schema URL returns 404, so this is untested. Until then, Antigravity users can reach npmscan through `agy plugin import gemini` after installing the Gemini extension.
 
 ### Cline
 
