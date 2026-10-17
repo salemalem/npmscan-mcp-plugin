@@ -19,7 +19,7 @@ Last researched: 2026-10-18. Recheck the queue numbers before relying on them.
 | GitHub Copilot (awesome-copilot) | ⏳ Submitted 2026-10-18 (tag `v3.1.2`); waiting for intake gates and maintainer review | [awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142) |
 | Kiro powers | 🔜 Next. Needs a manifest and README additions. | [submit](https://kiro.dev/powers/submit/) |
 | awesome-codex-plugins | 🔜 Next. Needs a manifest and `SECURITY.md`. | [repo](https://github.com/hashgraph-online/awesome-codex-plugins) |
-| Gemini CLI gallery | 🔜 Next. Manifest drafted and tested locally; see "Gemini CLI" below. | [docs](https://geminicli.com/docs/extensions/releasing/) |
+| Gemini CLI gallery | ⏳ Shipped 2026-10-18 (`0b29cac`, topic added, GitHub install verified); waiting for the daily crawl | [docs](https://geminicli.com/docs/extensions/releasing/) |
 | Antigravity (Google) | 🟡 Interest form only; root `plugin.json` conflict to resolve first | [form](https://forms.gle/2EX5RFYPoJe1UgxR9) |
 | Cline MCP Marketplace | 🟡 Optional, slow queue | [repo](https://github.com/cline/mcp-marketplace) |
 | Perplexity | 📧 Email only | see below |
@@ -125,11 +125,11 @@ A repo appears "if it passes validation". The checks aren't published, but `gemi
 - No `GEMINI.md` is needed; the skills already tell the model when to use npmscan.
 
 **Steps**
-- [ ] Add `gemini-extension.json` (above) at the repo root.
-- [ ] Add a "Using it with Gemini CLI" section to README.md with the install command `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin`, and list it under "Official listings → Pending".
-- [ ] Commit and push to `main`. No GitHub release is needed: git installs track the default branch, and every push offers users an update.
-- [ ] Add repo topics: `gh repo edit salemalem/npmscan-mcp-plugin --add-topic gemini-cli-extension`. While there, add discovery topics too: `mcp`, `mcp-server`, `npm`, `security`, `supply-chain-security`.
-- [ ] Verify from GitHub (not a local copy): install with `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin` into a throwaway `HOME`, then confirm `gemini mcp list` shows **Connected** and all 5 skills are listed.
+- [x] Add `gemini-extension.json` (above) at the repo root.
+- [x] Add a "Using it with Gemini CLI" section to README.md with the install command `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin`, and list it under "Official listings → Pending".
+- [x] Commit and push to `main`. No GitHub release is needed: git installs track the default branch, and every push offers users an update.
+- [x] Add repo topics: `gh repo edit salemalem/npmscan-mcp-plugin --add-topic gemini-cli-extension`. While there, add discovery topics too: `mcp`, `mcp-server`, `npm`, `security`, `supply-chain-security`.
+- [x] Verify from GitHub (not a local copy): install with `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin` into a throwaway `HOME`, then confirm `gemini mcp list` shows **Connected** and all 5 skills are listed.
 - [ ] After about 24 hours, search "npmscan" on [geminicli.com/extensions](https://geminicli.com/extensions/). If it's missing after 2–3 days, rerun `gemini extensions validate` on a fresh clone and ask in [gemini-cli Discussions](https://github.com/google-gemini/gemini-cli/discussions).
 
 **Upkeep:** `version` is now in four manifests: `.claude-plugin/plugin.json`, `kimi.plugin.json`, `.github/plugin/plugin.json` and `gemini-extension.json`. Bump all four together on each release.
