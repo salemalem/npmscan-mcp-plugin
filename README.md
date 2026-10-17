@@ -335,6 +335,22 @@ or in `cline_mcp_settings.json`:
 installer. Cline's marketplace logo is
 [`assets/logo-400.png`](assets/logo-400.png).
 
+## Using it with Factory (Droid)
+
+Droid installs Claude Code plugins as they are: it translates
+`.claude-plugin/` and `.mcp.json` into its own layout when it caches the
+plugin. Add this repo as a marketplace, then install the plugin:
+
+```bash
+droid plugin marketplace add salemalem/npmscan-mcp-plugin
+droid plugin install npmscan@npmscan-mcp-plugin --scope user
+```
+
+The marketplace takes its name from the repo (`npmscan-mcp-plugin`), not
+from the `name` in `.claude-plugin/marketplace.json`, so the plugin ID is
+`npmscan@npmscan-mcp-plugin`. Check it with `droid mcp list`: `npmscan`
+should show as `http  connected`, and the five skills come with it.
+
 ## Also available for other AI clients
 
 The same `npmscan` MCP server and the same `dependency-audit` /
