@@ -24,7 +24,7 @@ Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
 | Cline (new catalog) | ⏳ PR open 2026-10-17; validator passes | [cline/marketplace#262](https://github.com/cline/marketplace/pull/262) |
 | Cline (old MCP Marketplace) | ⏳ Issue open 2026-10-17; slow queue | [cline/mcp-marketplace#3063](https://github.com/cline/mcp-marketplace/issues/3063) |
 | Perplexity | ⏳ Email sent to `connectors@perplexity.ai` 2026-10-17; proposal form still to fill | [form](https://pplx.ai/connector-form-submission) |
-| Mistral Le Chat | 📧 Business development only | see below |
+| Mistral Le Chat | 📝 Long-shot pitch drafted 2026-10-18 (partner form; no public email) | [section](#mistral-le-chat-no-public-route) |
 | Docker MCP Catalog | ⏳ PR open 2026-10-17 as a long shot (queue stalled) | [docker/mcp-registry#5808](https://github.com/docker/mcp-registry/pull/5808) |
 | Factory (Droid) | ✅ Self-install works (README); ⏳ long-shot PR to the official marketplace | [Factory-AI/factory-plugins#60](https://github.com/Factory-AI/factory-plugins/pull/60) |
 | Zed | ✅ Nothing to submit: Zed is moving to the official MCP Registry; add a README snippet | [section](#zed) |
@@ -237,6 +237,9 @@ There are two separate routes:
 ### Mistral Le Chat (no public route)
 
 - The curated connectors directory goes through Mistral's business-development team. Admins can still add any remote MCP server by URL.
+- No partnerships email is published. The only routes are the "Partner with Mistral" form at https://mistral.ai/partners (name, work email, role, a 1,000-character goals field; "we'll be in touch if we think there's a good fit") and the general form at https://mistral.ai/contact. press@mistral.ai is for press only.
+- 2026-10-18: Gmail draft written (subject "Connector proposal: NPMScan for Le Chat", recipient blank), plus an 818-character version for the partner form. Odds are low: the directory's integration partners are big SaaS brands.
+- Recipient: the draft's To field is blank on purpose. contact@mistral.ai is unconfirmed (one search result says the legal notice lists it, but the page itself doesn't show it), so it's at most an optional second channel. **Next step for the user:** submit the partner form with the form text; optionally put contact@mistral.ai in the draft and send it.
 
 ### Docker MCP Catalog
 
