@@ -16,7 +16,7 @@ Last researched: 2026-10-18. Recheck the queue numbers before relying on them.
 | Grok / Grok Bot / Cursor (xAI form) | ⏳ Submitted 2026-10-18; xAI replies by email | [form](https://x.ai/bot/marketplace/submit-a-plugin) |
 | Kimi official marketplace | ⏳ See [KIMI.md](KIMI.md) | |
 | Cursor Marketplace (Cursor's own) | 🔜 Next. Needs a manifest first. | [submit](https://cursor.com/marketplace/publish) |
-| GitHub Copilot (awesome-copilot) | 🔜 Next | [repo](https://github.com/github/awesome-copilot) |
+| GitHub Copilot (awesome-copilot) | ⏳ Submitted 2026-10-18 (tag `v3.1.2`); waiting for intake gates and maintainer review | [awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142) |
 | Kiro powers | 🔜 Next. Needs a manifest and README additions. | [submit](https://kiro.dev/powers/submit/) |
 | awesome-codex-plugins | 🔜 Next. Needs a manifest and `SECURITY.md`. | [repo](https://github.com/hashgraph-online/awesome-codex-plugins) |
 | Gemini CLI gallery | 🔜 Next. Indexed automatically once the manifest and topic exist. | [docs](https://geminicli.com/docs/extensions/releasing/) |
@@ -44,7 +44,7 @@ Most of the 🔜 targets need files this repo doesn't have yet. Each one points 
 ### Step 2: submit
 
 - [ ] **Cursor:** submit the repo at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish).
-- [ ] **GitHub Copilot:** open the external-plugin issue form in `github/awesome-copilot` (not a PR).
+- [x] **GitHub Copilot:** submitted as [#5142](https://github.com/github/awesome-copilot/issues/5142). If the bot labels it `requires-submitter-fixes`, fix the problem and comment `/rerun-intake`.
 - [ ] **Kiro:** submit at [kiro.dev/powers/submit](https://kiro.dev/powers/submit/).
 - [ ] **Codex list:** run their scanner, then open a one-line README PR to `hashgraph-online/awesome-codex-plugins`.
 - [ ] **Gemini CLI:** nothing to submit; check the [gallery](https://geminicli.com/extensions/) a day after tagging.
