@@ -1,6 +1,6 @@
 # Listing plan: getting npmscan into more AI tools
 
-Last researched: 2026-10-18. Recheck the queue numbers before relying on them.
+Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
 
 ## Status at a glance
 
@@ -16,7 +16,7 @@ Last researched: 2026-10-18. Recheck the queue numbers before relying on them.
 | Grok / Grok Bot / Cursor (xAI form) | ⏳ Submitted 2026-10-18; xAI replies by email | [form](https://x.ai/bot/marketplace/submit-a-plugin) |
 | Kimi official marketplace | ⏳ See [KIMI.md](KIMI.md) | |
 | Cursor Marketplace (Cursor's own) | 🔜 Next. Needs a manifest first. | [submit](https://cursor.com/marketplace/publish) |
-| GitHub Copilot (awesome-copilot) | ⏳ Submitted 2026-10-18 (tag `v3.1.2`); waiting for intake gates and maintainer review | [awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142) |
+| GitHub Copilot (awesome-copilot) | ⏳ All automated gates passed, labelled `ready-for-review`; waiting for a maintainer's `/approve` | [awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142) |
 | Kiro powers | 🔜 Next. Needs a manifest and README additions. | [submit](https://kiro.dev/powers/submit/) |
 | awesome-codex-plugins | 🔜 Next. Needs a manifest and `SECURITY.md`. | [repo](https://github.com/hashgraph-online/awesome-codex-plugins) |
 | Gemini CLI gallery | ⏳ Shipped 2026-10-18 (`0b29cac`, topic added, GitHub install verified); waiting for the daily crawl | [docs](https://geminicli.com/docs/extensions/releasing/) |
@@ -28,33 +28,39 @@ Last researched: 2026-10-18. Recheck the queue numbers before relying on them.
 
 ## Next steps
 
-### Step 1: one release that adds the missing manifests
+### Step 1: add the missing manifests
 
-Most of the 🔜 targets need files this repo doesn't have yet. Each one points at the same server (`https://npmscan.com/api/mcp`) and the same `skills/` folder, the way `kimi.plugin.json` already does.
+Each manifest points at the same server (`https://npmscan.com/api/mcp`) and the same `skills/` folder, the way `kimi.plugin.json` already does. Each tool reads its own file, so adding one doesn't affect the others.
 
-- [ ] Root `plugin.json` in the "Agent Plugins" format, with `$schema`, `name`, `version`, `description`, `author`, `keywords` and `license`. Cursor, Kiro and Copilot's newer format read it.
-- [ ] Root `mcp.json` with a matching Agent Plugins `$schema`. Cursor and Copilot's newer format read it. Keep `.mcp.json` for Claude Code.
+Done:
+- [x] `.github/plugin/plugin.json`, for GitHub Copilot (`67beba8`).
+- [x] `gemini-extension.json` at the root, for Gemini CLI (`0b29cac`).
+- [x] GitHub topics: `gemini-cli-extension`, `mcp`, `npm`, `security`, `supply-chain-security`.
+
+Still to do, for Cursor, Kiro and the Codex list:
+- [ ] **Decide the root `plugin.json` first.** Kiro needs it in the Agent Plugins format, with `$schema` set to `https://agent-plugins.org/schemas/1.0.0/plugin.schema.json` (the exact URL Copilot's gate asked for) plus `name`, `version`, `description`, `author`, `keywords` and `license`. Antigravity reads the same root file but documents only `name` and `description`; see the Antigravity section. Test both before committing to one shape.
+- [ ] **Cursor:** use `.cursor-plugin/plugin.json`, Cursor's own path, so it doesn't depend on that root-file decision. Add a root `mcp.json`; keep `.mcp.json` for Claude Code.
 - [ ] `.codex-plugin/plugin.json`, for the Codex list.
-- [ ] `gemini-extension.json` at the root, for Gemini CLI.
 - [ ] `SECURITY.md` with a vulnerability disclosure policy, for the Codex list.
 - [ ] README additions: a privacy-policy link and a support contact, for Kiro.
-- [ ] Check that Claude Code, Kimi and Grok Build still load the plugin correctly with the new root files present.
-- [ ] Tag a release (for example `v3.2.0`). Copilot needs a tag plus a commit SHA.
-- [ ] Add the `gemini-cli-extension` topic to the GitHub repo.
+- [ ] Check that Claude Code, Kimi, Grok Build, Copilot and Gemini still load correctly with the new files present.
+- [ ] When the version changes, bump it in every manifest (see "Version upkeep" below) and tag a new release (for example `v3.2.0`).
 
 ### Step 2: submit
 
 - [ ] **Cursor:** submit the repo at [cursor.com/marketplace/publish](https://cursor.com/marketplace/publish).
-- [x] **GitHub Copilot:** submitted as [#5142](https://github.com/github/awesome-copilot/issues/5142). If the bot labels it `requires-submitter-fixes`, fix the problem and comment `/rerun-intake`.
+- [x] **GitHub Copilot:** submitted as [#5142](https://github.com/github/awesome-copilot/issues/5142); all gates pass and it's `ready-for-review`.
 - [ ] **Kiro:** submit at [kiro.dev/powers/submit](https://kiro.dev/powers/submit/).
 - [ ] **Codex list:** run their scanner, then open a one-line README PR to `hashgraph-online/awesome-codex-plugins`.
-- [ ] **Gemini CLI:** nothing to submit; check the [gallery](https://geminicli.com/extensions/) a day after tagging.
+- [x] **Gemini CLI:** nothing to submit; shipped and verified (see the Gemini CLI section).
 - [ ] **Cline (optional):** open an issue with the repo link and a 400×400 PNG logo.
 - [ ] **Perplexity:** email `api@perplexity.ai` about a managed connector.
 
 ### Ongoing
 
 - [ ] Watch [#1506](https://github.com/xai-org/plugin-marketplace/pull/1506) and the xAI form reply. Answer review comments.
+- [ ] Watch [#5142](https://github.com/github/awesome-copilot/issues/5142) for a maintainer's `/approve` or `/reject`.
+- [ ] Around 2026-10-19/20, search "npmscan" on [geminicli.com/extensions](https://geminicli.com/extensions/).
 - [ ] Each Grok Build update needs a new PR to `xai-org/plugin-marketplace` that bumps the pinned commit, then runs `python3 scripts/generate-plugin-index.py`, `scripts/validate-catalog.py` and `scripts/generate-plugin-index.py --check`. The index script fetches every plugin in the catalog and takes several minutes.
 - [ ] When something is listed, move it to "Official listings" in [README.md](README.md) and update the table above.
 
@@ -78,8 +84,11 @@ Most of the 🔜 targets need files this repo doesn't have yet. Each one points 
 
 - This is the default plugin marketplace in Copilot CLI and VS Code.
 - **Route:** the external-plugin issue form. Automated checks run first (lint plus an install smoke test), then a maintainer comments `/approve` or `/reject`. Approval opens the PR automatically. Don't edit `plugins/external.json` directly.
-- **Fields:** name, description, `owner/repo`, a release tag, the full commit SHA, version, license and author.
-- The current layout (`.claude-plugin/plugin.json`, `.mcp.json`, `skills/`) already loads as a legacy Copilot plugin.
+- **Fields:** name, description, `owner/repo`, a release tag and/or the full commit SHA, version, license and author.
+- **What we submitted:** commit `67beba8` with no tag (`v3.1.2` stays on `a5e482a`), version 3.1.2, author BlockHacks.io. The issue was opened with `gh`, which can't add labels for non-collaborators, so the body starts with `<!-- external-plugin-submission -->` to trigger their bot. Editing the issue re-runs the gates.
+- **Lesson from the first run:** the gates look for a manifest only at `plugin.json`, `.plugin/plugin.json` or `.github/plugin/plugin.json`. They ignore `.claude-plugin/plugin.json`, so the first run failed the install and version checks. Adding `.github/plugin/plugin.json` fixed both.
+- **Current result:** skills lint, install test and version match all pass. One non-blocking warning remains: the manifest isn't the root Agent Plugins `plugin.json` and has no `$schema`. The root `plugin.json` from Step 1 would clear it.
+- **Updating the listing later:** after approval, version bumps go through a PR to `plugins/external.json`, and the bot runs the same gates on it.
 - **Odds:** about 63 approved vs 241 rejected, decided within days. Common rejection reasons are "too niche", "too product-specific" and "primarily a marketing push for an external service". Pitch it around developer supply-chain safety, not npmscan.com.
 
 ### Kiro powers (Amazon)
@@ -94,6 +103,8 @@ Most of the 🔜 targets need files this repo doesn't have yet. Each one points 
 - OpenAI's official plugin directory is shared between ChatGPT and Codex, so npmscan may already be in Codex's official directory. Not confirmed.
 
 ### Gemini CLI
+
+**Status: ⏳ shipped, waiting for the gallery's daily crawl.** `gemini-extension.json` is on `main` (`0b29cac`) and the `gemini-cli-extension` topic is on the repo. Installing from GitHub works today: 5 skills load and the server shows Connected. As of 2026-10-17 19:30 UTC, minutes after the push, it wasn't in the gallery yet. Expect it within about 24 hours.
 
 Researched and tested on 2026-10-18 with Gemini CLI 0.64.0.
 
@@ -128,11 +139,17 @@ A repo appears "if it passes validation". The checks aren't published, but `gemi
 - [x] Add `gemini-extension.json` (above) at the repo root.
 - [x] Add a "Using it with Gemini CLI" section to README.md with the install command `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin`, and list it under "Official listings → Pending".
 - [x] Commit and push to `main`. No GitHub release is needed: git installs track the default branch, and every push offers users an update.
-- [x] Add repo topics: `gh repo edit salemalem/npmscan-mcp-plugin --add-topic gemini-cli-extension`. While there, add discovery topics too: `mcp`, `mcp-server`, `npm`, `security`, `supply-chain-security`.
+- [x] Add repo topics: `gh repo edit salemalem/npmscan-mcp-plugin --add-topic gemini-cli-extension`. Discovery topics added at the same time: `mcp`, `npm`, `security`, `supply-chain-security`.
 - [x] Verify from GitHub (not a local copy): install with `gemini extensions install https://github.com/salemalem/npmscan-mcp-plugin` into a throwaway `HOME`, then confirm `gemini mcp list` shows **Connected** and all 5 skills are listed.
 - [ ] After about 24 hours, search "npmscan" on [geminicli.com/extensions](https://geminicli.com/extensions/). If it's missing after 2–3 days, rerun `gemini extensions validate` on a fresh clone and ask in [gemini-cli Discussions](https://github.com/google-gemini/gemini-cli/discussions).
 
-**Upkeep:** `version` is now in four manifests: `.claude-plugin/plugin.json`, `kimi.plugin.json`, `.github/plugin/plugin.json` and `gemini-extension.json`. Bump all four together on each release.
+### Version upkeep
+
+The version number is now in four manifests. Bump them together on each release, and add any new manifest from Step 1 to this list:
+- `.claude-plugin/plugin.json` (Claude Code)
+- `kimi.plugin.json` (Kimi)
+- `.github/plugin/plugin.json` (Copilot; its listing checks this matches the submitted version)
+- `gemini-extension.json` (Gemini CLI)
 
 ### Antigravity (Google, the Gemini CLI replacement)
 
