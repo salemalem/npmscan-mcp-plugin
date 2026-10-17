@@ -181,6 +181,8 @@ npmscan-mcp-plugin/
 ├── .github/plugin/
 │   └── plugin.json         # GitHub Copilot plugin manifest
 ├── gemini-extension.json   # Gemini CLI extension manifest
+├── llms-install.md         # setup steps for Cline's one-click installer
+├── assets/logo-400.png     # 400×400 logo for the Cline marketplace
 ├── kimi.plugin.json        # Kimi plugin manifest (ignored by Claude Code)
 ├── icon.png                # Kimi plugin icon (dark tile, npmscan.com branding)
 ├── locales/                # Kimi interface translations (zh-CN)
@@ -306,6 +308,32 @@ nothing to submit. Check a change with
 Antigravity CLI users (which replaced Gemini CLI for free and Google AI
 Pro/Ultra accounts) can bring the extension over with
 `agy plugin import gemini` after installing it in Gemini CLI.
+
+## Using it with Cline
+
+Cline connects to the hosted server directly; there's nothing to build and
+no API key:
+
+```bash
+cline mcp install npmscan --transport http https://npmscan.com/api/mcp --yes
+```
+
+or in `cline_mcp_settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "npmscan": {
+      "type": "streamableHttp",
+      "url": "https://npmscan.com/api/mcp"
+    }
+  }
+}
+```
+
+[`llms-install.md`](llms-install.md) has the same steps for Cline's one-click
+installer. Cline's marketplace logo is
+[`assets/logo-400.png`](assets/logo-400.png).
 
 ## Also available for other AI clients
 
