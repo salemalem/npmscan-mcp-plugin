@@ -1,6 +1,6 @@
 # Listing plan: getting npmscan into more AI tools
 
-Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
+Last updated: 2026-10-19. Recheck the queue numbers before relying on them.
 
 ## Status at a glance
 
@@ -19,16 +19,28 @@ Last updated: 2026-10-18. Recheck the queue numbers before relying on them.
 | GitHub Copilot (awesome-copilot) | ⏳ All automated gates passed, labelled `ready-for-review`; waiting for a maintainer's `/approve` | [awesome-copilot#5142](https://github.com/github/awesome-copilot/issues/5142) |
 | Kiro powers | 🔜 Next. Needs a manifest and README additions. | [submit](https://kiro.dev/powers/submit/) |
 | awesome-codex-plugins | 🔜 Next. Needs a manifest and `SECURITY.md`. | [repo](https://github.com/hashgraph-online/awesome-codex-plugins) |
-| Gemini CLI gallery | ⏳ Shipped 2026-10-18 (`0b29cac`, topic added, GitHub install verified); waiting for the daily crawl | [docs](https://geminicli.com/docs/extensions/releasing/) |
+| Gemini CLI gallery | ⏳ Shipped 2026-10-18 (`0b29cac`, topic added, GitHub install verified); waiting for the crawl (gallery data stale since 2026-10-15 as of 10-19) | [docs](https://geminicli.com/docs/extensions/releasing/) |
 | Antigravity (Google) | 🟡 Interest form only; root `plugin.json` conflict to resolve first | [form](https://forms.gle/2EX5RFYPoJe1UgxR9) |
 | Cline (new catalog) | ⏳ PR open 2026-10-17; validator passes | [cline/marketplace#262](https://github.com/cline/marketplace/pull/262) |
 | Cline (old MCP Marketplace) | ⏳ Issue open 2026-10-17; slow queue | [cline/mcp-marketplace#3063](https://github.com/cline/mcp-marketplace/issues/3063) |
 | Perplexity | ⏳ Email sent to `connectors@perplexity.ai` 2026-10-17; proposal form still to fill | [form](https://pplx.ai/connector-form-submission) |
-| Mistral Le Chat | 📝 Long-shot pitch drafted 2026-10-18 (partner form; no public email) | [section](#mistral-le-chat-no-public-route) |
+| Mistral Le Chat | 📝 Long-shot pitch drafted 2026-10-18; not sent yet (partner form; no public email) | [section](#mistral-le-chat-no-public-route) |
 | Docker MCP Catalog | ⏳ PR open 2026-10-17 as a long shot (queue stalled) | [docker/mcp-registry#5808](https://github.com/docker/mcp-registry/pull/5808) |
 | Factory (Droid) | ✅ Self-install works (README); ⏳ long-shot PR to the official marketplace | [Factory-AI/factory-plugins#60](https://github.com/Factory-AI/factory-plugins/pull/60) |
 | Zed | ✅ Nothing to submit: Zed is moving to the official MCP Registry; add a README snippet | [section](#zed) |
 | Windsurf (now Devin Desktop) | 🔜 No submission route; add a README snippet | [section](#windsurf-now-devin-desktop) |
+
+## Replies check (2026-10-19)
+
+No reviewer has replied anywhere yet. Every submission is still open with no maintainer comments or reviews:
+
+- **xAI PR #1506:** open; no reviews; Socket and Semgrep pass, and "Validate catalog" still needs approval. **x.ai form:** no email from xAI. The `noreply@x.ai` emails in the inbox are our own Grok automations, not marketplace replies.
+- **Copilot #5142:** still `ready-for-review`; no maintainer `/approve` or `/reject` yet.
+- **Gemini gallery:** not listed yet. The gallery's data file (`geminicli.com/extensions.json`, 2,198 entries) hasn't been refreshed since 2026-10-15, so it hasn't crawled since we shipped. Check again in a few days.
+- **Perplexity:** no reply in the email thread (sent 2026-10-17). Follow up around 2026-10-31.
+- **Mistral:** the draft is unsent and the partner form isn't submitted yet (the user's action).
+- **Cline PR #262 and issue #3063, Docker PR #5808, Factory PR #60:** open, no comments or reviews.
+- **Side note:** mcprush.com listed the server as "NPMScan MCP" on 2026-10-17, and the claim from @salemalem was approved the same day.
 
 ## Next steps
 
