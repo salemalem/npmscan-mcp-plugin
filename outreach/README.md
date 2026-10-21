@@ -51,6 +51,19 @@ Run it every couple of days while anything is `submitted`:
 - **`gh` can't add labels as a non-collaborator.** Issue-form bots that key on labels need the form's marker in the body (Copilot: `<!-- external-plugin-submission -->`).
 - **The official MCP Registry covers a lot for free.** Goose, Zed and Docker's CLI read from it. Check that before building a separate submission.
 - **The source stays on the personal `salemalem` account**, so the Claude and ChatGPT listings don't have to move.
+- **Search in other languages too.** Most Chinese, Russian, Japanese and Korean "awesome" lists are dead or only cover local services, but a few are very active and easy to get into: `sfrangulov/claude-code-handbook-ru` merges remote-MCP entries within hours, and `laolaoshiren/claude-code-skills-zh` checks each PR and then adds the entry in its own commit (a closed PR there isn't a rejection). Write those PRs in the list's language. China also has platform hubs with their own sign-up flows (ModelScope MCP 广场, Baidu's sai.baidu.com/mcp).
+- **"Closed source" blocks some security lists.** Scanners-Box and MobinX only take projects whose code is on GitHub; the open plugin repo isn't enough when the server behind it is private.
+
+## Finding new directories
+
+GitHub search allows about 30 queries a minute, so run them slowly (one every 10-15 s) or they fail with HTTP 403. Queries that found things in October 2026:
+
+- Chinese: `MCP 服务器`, `MCP 合集`, `MCP 精选`, `Claude Code 插件`, `Claude Code 中文`, `skills 合集 中文`, `开源安全工具`, `供应链安全`
+- Russian: `MCP серверы`, `awesome mcp ru`, `Claude Code плагины`, `каталог MCP`
+- Japanese / Korean: `MCP サーバー`, `Claude Code プラグイン`, `MCP 서버`, `Claude Code 플러그인`
+- Web search in each language for directory sites ("MCP 导航 提交 收录", "каталог MCP серверов добавить")
+
+For each hit, check that outside PRs actually get merged (merges in the last 30 days by people other than the owner, and not bots) before adding a row. Record dead lists in the `stalled-*` rows so nobody checks them again.
 
 ## Repo prep still to do
 
