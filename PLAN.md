@@ -1,6 +1,6 @@
 # Listing plan: getting npmscan into more AI tools
 
-Last updated: 2026-10-19. Recheck the queue numbers before relying on them.
+Last updated: 2026-10-21. Recheck the queue numbers before relying on them.
 
 ## Status at a glance
 
@@ -29,6 +29,15 @@ Last updated: 2026-10-19. Recheck the queue numbers before relying on them.
 | Factory (Droid) | ✅ Self-install works (README); ⏳ long-shot PR to the official marketplace | [Factory-AI/factory-plugins#60](https://github.com/Factory-AI/factory-plugins/pull/60) |
 | Zed | ✅ Nothing to submit: Zed is moving to the official MCP Registry; add a README snippet | [section](#zed) |
 | Windsurf (now Devin Desktop) | 🔜 No submission route; add a README snippet | [section](#windsurf-now-devin-desktop) |
+
+## Replies check (2026-10-21)
+
+Nothing new since 2026-10-19. No submission has had any activity since we opened it on 2026-10-17:
+
+- **xAI PR #1506, Copilot #5142, Cline #262 / #3063, Docker #5808, Factory #60:** each was last updated 2026-10-17, with no new comments, reviews or label changes. Copilot is still `ready-for-review`.
+- **Email:** no reply from xAI (form), Perplexity (thread still 1 message) or Mistral (not sent yet).
+- **Gemini gallery:** still not listed. `extensions.json` is still frozen at 2026-10-15 (2,198 entries), so the crawl itself is stalled; it's not about us. If it's still frozen around 2026-10-26, check gemini-cli issues for a gallery outage.
+- **New footprint we didn't submit:** Glama's connector page was re-tested on about 2026-10-19; SaaSHub has status and alternatives pages; Capterra lists npmscan. These come from the user's Grok mention-watch email of 2026-10-20.
 
 ## Replies check (2026-10-19)
 
