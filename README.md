@@ -176,7 +176,6 @@ npmscan-mcp-plugin/
 ├── .mcp.json               # bundles the npmscan MCP server
 ├── README.md
 ├── CHANGELOG.md            # what changed in each plugin version
-├── SUBMISSION.md           # values for the plugin-directory submission form
 ├── LICENSE
 ├── .github/plugin/
 │   └── plugin.json         # GitHub Copilot plugin manifest
@@ -187,7 +186,7 @@ npmscan-mcp-plugin/
 ├── icon.png                # Kimi plugin icon (dark tile, npmscan.com branding)
 ├── locales/                # Kimi interface translations (zh-CN)
 │   └── zh-CN.json
-├── KIMI.md                 # Kimi test results + submission steps
+├── outreach/               # directory listings: tracker, per-directory notes, scripts
 └── skills/                 # shared by both clients; generated, don't edit here (see below)
     ├── dependency-audit/
     │   ├── SKILL.md
@@ -223,7 +222,7 @@ prompts in each skill's `references/test-prompts.md`.
 
 NPMScan is already listed in Anthropic's plugin directory (see
 [Official listings](#official-listings)). The values used for that submission form
-are in [SUBMISSION.md](SUBMISSION.md); update them there when the plugin
+are in [outreach/targets/claude.md](outreach/targets/claude.md); update them there when the plugin
 changes.
 
 - **Self-hosted (this repo)**: nothing further to do — anyone can
@@ -258,11 +257,11 @@ The manifest is prepared for the official Kimi marketplace: full
 `zh-CN` locale, `brandColor` (#ef4444, npmscan.com's primary red), a dark
 rounded-tile `icon.png` built from the site's dark-mode logo, and
 `hostKind: hosted`. Kimi's local validation passed with 0 errors / 0
-warnings on v3.0.2 (the last version imported into Kimi; see KIMI.md).
+warnings on v3.0.2 (the last version imported into Kimi; see [outreach/targets/kimi.md](outreach/targets/kimi.md)).
 Official-marketplace publication goes through a Kimi review step — see
-[KIMI.md](KIMI.md) for the status and the application steps.
+[outreach/targets/kimi.md](outreach/targets/kimi.md) for the status and the application steps.
 
-Test results and marketplace submission steps: [KIMI.md](KIMI.md).
+Test results and marketplace submission steps: [outreach/targets/kimi.md](outreach/targets/kimi.md).
 
 When editing, keep Kimi-only settings inside `kimi.plugin.json`. Don't add
 root-level `commands/`, `agents/`, or `hooks/` directories for Kimi, because

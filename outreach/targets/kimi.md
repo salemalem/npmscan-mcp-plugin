@@ -1,7 +1,7 @@
 # Kimi plugin — setup, test results, and marketplace submission
 
 This repo is both a Claude Code plugin and a Kimi plugin. Kimi reads
-[`kimi.plugin.json`](kimi.plugin.json); Claude Code reads `.claude-plugin/`
+[`kimi.plugin.json`](../../kimi.plugin.json); Claude Code reads `.claude-plugin/`
 and `.mcp.json`. Both share `skills/`.
 
 Kimi docs:
@@ -99,7 +99,7 @@ Download from <https://www.kimi.ai/products/kimi-work> (or kimi.ai →
 
 1. Plugins → **Personal** tab → find **NPMScan** → click **+** / **Install**.
 2. Start a new conversation and try (full list: "Example use cases" in
-   [SUBMISSION.md](SUBMISSION.md)):
+   [claude.md](claude.md)):
    ```
    Does lodash have any known vulnerabilities?
    Is chalk 5.3.1 safe? I heard there was a supply-chain incident.
@@ -125,4 +125,4 @@ Download from <https://www.kimi.ai/products/kimi-work> (or kimi.ai →
    and replies by email if they need anything. No published criteria or
    timeline.
 
-After submitting, update the Kimi row in `npmscan/mcp/LISTINGS.md`.
+After submitting, record it: `node outreach/scripts/mark.ts --id kimi --status submitted --submitted-on <date>`.

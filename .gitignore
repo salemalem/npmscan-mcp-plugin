@@ -1,0 +1,5 @@
+node_modules/
+.DS_Store
+
+# Held while an outreach script runs
+outreach/tracker.csv.lock
