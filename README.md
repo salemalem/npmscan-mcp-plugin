@@ -14,6 +14,10 @@ this plugin points at the same public service.
   [claude.ai/customize/skills/…/npmscan](https://claude.ai/customize/skills/id/aa8fcafe-0bcd-41b6-9e07-6c7ebbb71153%40anthropic-plugin-directory)
 - **ChatGPT** (install npmscan as an app for one-click setup):
   [chatgpt.com/plugins/…/npmscan](https://chatgpt.com/plugins/plugin_asdk_app_6a6a699e6f3481918d5e6034432894f2?q=npm)
+- **mcpHQ**: [mcphq.org](https://github.com/mcpHQ/awesome-mcp-servers)
+- **TensorBlock MCP Index**: [tensorblock.co/mcp](https://github.com/TensorBlock/awesome-mcp-servers)
+- **Awesome Gemini CLI**: [Piebald-AI/awesome-gemini-cli](https://github.com/Piebald-AI/awesome-gemini-cli)
+- **Awesome Gemini CLI Extensions**: [Piebald-AI/awesome-gemini-cli-extensions](https://github.com/Piebald-AI/awesome-gemini-cli-extensions)
 - **Setup docs for other clients**: [npmscan.com/mcp](https://npmscan.com/mcp)
 
 Pending:
