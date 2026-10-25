@@ -2,6 +2,12 @@
 
 Getting npmscan listed in AI tools' plugin, extension and connector directories, and tracking each submission until it's live or closed.
 
+**Scope: the npmscan MCP plugin only** (the MCP server, the Claude/Gemini/Codex plugin and its skills).
+
+- Listings of the npmscan.com website don't go here. Awesome-list PRs for the website live in `npmscan/outreach`. Software directories like SaaSHub and Capterra, and dev-tool lists that link npmscan.com, are out of scope here even when the mention-watch email reports them.
+- PRs that add the GitHub Action to other repos' CI live in `npmscan-related/npmscan-action/outreach`.
+- Don't add or update rows here for either of those. If a directory fits one of the other trackers better, tell the user instead.
+
 | Path | What |
 |---|---|
 | `README.md` | This file: how we work, lessons, repo prep still to do |
@@ -33,7 +39,7 @@ Then add the row (`mark.ts --add`), write `targets/<id>.md`, submit, and mark it
 Run it every couple of days while anything is `submitted`:
 
 1. `node outreach/scripts/refresh.ts`. It updates every GitHub PR/issue and crawled directory, and prints who's waiting on our reply, follow-ups due, and anything odd.
-2. Check Gmail for what the script can't see. Search for the routes marked `email`, `form` or `in_app`: replies from perplexity.ai, x.ai (ignore `noreply@x.ai`: those are our own Grok automations), kimi/moonshot and mistral.ai, plus the user's mention-watch emails for listings we didn't submit (add those as `unsolicited` rows).
+2. Check Gmail for what the script can't see. Search for the routes marked `email`, `form` or `in_app`: replies from perplexity.ai, x.ai (ignore `noreply@x.ai`: those are our own Grok automations), kimi/moonshot and mistral.ai, plus the user's mention-watch emails for listings we didn't submit (add those as `unsolicited` rows, but only when they list the MCP plugin, not npmscan.com or the Action).
 3. Record anything new with `mark.ts`, reply where we owe one, and tell the user in chat.
 
 ## Writing to maintainers and teams
