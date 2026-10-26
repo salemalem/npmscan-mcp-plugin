@@ -7,8 +7,10 @@
   `codex plugin marketplace add salemalem/npmscan-mcp-plugin` works. The
   Claude Code, Kimi, Gemini CLI and Copilot manifests are unchanged.
 - Added `SECURITY.md`, `.codexignore` and `.plugin-scanner.toml` for the HOL
-  plugin-scanner used by awesome-codex-plugins (score 99/100).
+  plugin-scanner used by awesome-codex-plugins (score 100/100).
 - README and `llms-install.md`: Codex and TRAE setup.
+- Codex listing screenshots: `assets/screenshot-1.png` (package page) and
+  `assets/screenshot-2.png` (malware advisory).
 
 ## 3.1.2
 

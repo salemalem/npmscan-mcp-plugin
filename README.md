@@ -186,6 +186,7 @@ npmscan-mcp-plugin/
 ├── gemini-extension.json   # Gemini CLI extension manifest
 ├── llms-install.md         # setup steps for Cline's one-click installer
 ├── assets/logo-400.png     # 400×400 logo for the Cline marketplace
+├── assets/screenshot-*.png # Codex listing screenshots (npmscan.com pages)
 ├── .codex-plugin/
 │   └── plugin.json         # Codex plugin manifest (ignored by Claude Code)
 ├── .agents/plugins/
