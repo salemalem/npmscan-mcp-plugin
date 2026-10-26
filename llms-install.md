@@ -28,6 +28,41 @@ Or add this to `cline_mcp_settings.json`:
 }
 ```
 
+## Codex
+
+```bash
+codex plugin marketplace add salemalem/npmscan-mcp-plugin
+codex plugin add npmscan@npmscan
+```
+
+This installs the MCP server and the five skills. For the MCP server only,
+add this to `~/.codex/config.toml`:
+
+```toml
+[mcp_servers.npmscan]
+url = "https://npmscan.com/api/mcp"
+```
+
+## TRAE
+
+Open this link and confirm in TRAE:
+
+```
+trae://trae.ai-ide/mcp-import?type=http&name=npmscan&config=eyJ1cmwiOiJodHRwczovL25wbXNjYW4uY29tL2FwaS9tY3AifQ%3D%3D
+```
+
+Or go to Settings > MCP > Add > Create Manually and paste:
+
+```json
+{
+  "mcpServers": {
+    "npmscan": {
+      "url": "https://npmscan.com/api/mcp"
+    }
+  }
+}
+```
+
 ## Check that it works
 
 Ask: "Is the npm package event-stream@3.3.6 safe?" The answer should come from

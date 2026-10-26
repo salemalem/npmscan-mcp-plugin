@@ -186,6 +186,13 @@ npmscan-mcp-plugin/
 ├── gemini-extension.json   # Gemini CLI extension manifest
 ├── llms-install.md         # setup steps for Cline's one-click installer
 ├── assets/logo-400.png     # 400×400 logo for the Cline marketplace
+├── .codex-plugin/
+│   └── plugin.json         # Codex plugin manifest (ignored by Claude Code)
+├── .agents/plugins/
+│   └── marketplace.json    # lets Codex add this repo as a marketplace
+├── .codexignore            # paths the plugin scanner skips
+├── .plugin-scanner.toml    # HOL plugin-scanner config (see Using it with Codex)
+├── SECURITY.md             # how to report a security problem
 ├── kimi.plugin.json        # Kimi plugin manifest (ignored by Claude Code)
 ├── icon.png                # Kimi plugin icon (dark tile, npmscan.com branding)
 ├── locales/                # Kimi interface translations (zh-CN)
@@ -353,6 +360,64 @@ The marketplace takes its name from the repo (`npmscan-mcp-plugin`), not
 from the `name` in `.claude-plugin/marketplace.json`, so the plugin ID is
 `npmscan@npmscan-mcp-plugin`. Check it with `droid mcp list`: `npmscan`
 should show as `http  connected`, and the five skills come with it.
+
+## Using it with Codex
+
+This repo is also a [Codex plugin](https://developers.openai.com/codex/plugins/build):
+[`.codex-plugin/plugin.json`](.codex-plugin/plugin.json) points at the same
+`skills/` and the same [`.mcp.json`](.mcp.json), and
+[`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json) lets
+you add the repo as a marketplace:
+
+```bash
+codex plugin marketplace add salemalem/npmscan-mcp-plugin
+codex plugin add npmscan@npmscan
+```
+
+Check it with `codex mcp list`: `npmscan` should show as enabled at
+`https://npmscan.com/api/mcp`. The other clients ignore `.codex-plugin/` and
+`.agents/`.
+
+Before changing the Codex manifest, run the
+[HOL plugin-scanner](https://github.com/hashgraph-online/hol-guard) that
+[awesome-codex-plugins](https://github.com/hashgraph-online/awesome-codex-plugins)
+uses (it needs 80 or more with no critical or high findings):
+
+```bash
+pipx install --force "plugin-scanner==3.57.0"
+plugin-scanner scan . --format text
+```
+
+[`.plugin-scanner.toml`](.plugin-scanner.toml) turns off one Kimi rule that
+misreads `kimi.plugin.json`
+([hol-guard#6032](https://github.com/hashgraph-online/hol-guard/issues/6032)).
+Remove it once that's fixed.
+
+## Using it with TRAE
+
+TRAE connects to the hosted server directly. Open this link to add it in one
+click (TRAE asks you to confirm):
+
+```
+trae://trae.ai-ide/mcp-import?type=http&name=npmscan&config=eyJ1cmwiOiJodHRwczovL25wbXNjYW4uY29tL2FwaS9tY3AifQ%3D%3D
+```
+
+Or go to **Settings > MCP > Add > Create Manually** and paste:
+
+```json
+{
+  "mcpServers": {
+    "npmscan": {
+      "url": "https://npmscan.com/api/mcp"
+    }
+  }
+}
+```
+
+For one project only, put the same JSON in `.trae/mcp.json`. To add the
+skills, copy the folders in `skills/` to `~/.trae/skills/` (or
+`.trae/skills/` in a project), or zip one skill folder and use **Upload
+Skill** in TRAE's marketplace.
 
 ## Also available for other AI clients
 

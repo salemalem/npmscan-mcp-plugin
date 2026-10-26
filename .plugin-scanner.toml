@@ -1,0 +1,9 @@
+# Config for the HOL plugin-scanner (https://github.com/hashgraph-online/hol-guard).
+
+[rules]
+# The scanner wants every kimi.plugin.json `interface` value to be a string, but
+# Kimi Work needs tryPrompts (a list) and mcpOverrides/skillOverrides (objects),
+# and locales/zh-CN.json translates them. Reported as a false positive:
+# https://github.com/hashgraph-online/hol-guard/issues/6032
+# Remove this once the rule is fixed.
+disabled = ["KIMI_INTERFACE_INVALID"]

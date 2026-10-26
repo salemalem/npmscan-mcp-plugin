@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Added a Codex plugin: `.codex-plugin/plugin.json` (same skills and MCP
+  server via `.mcp.json`) and `.agents/plugins/marketplace.json`, so
+  `codex plugin marketplace add salemalem/npmscan-mcp-plugin` works. The
+  Claude Code, Kimi, Gemini CLI and Copilot manifests are unchanged.
+- Added `SECURITY.md`, `.codexignore` and `.plugin-scanner.toml` for the HOL
+  plugin-scanner used by awesome-codex-plugins (score 99/100).
+- README and `llms-install.md`: Codex and TRAE setup.
+
 ## 3.1.2
 
 Follows the server's 3.1.1 and 3.1.2 releases (this plugin skipped 3.1.1):
