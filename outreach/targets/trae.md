@@ -16,6 +16,10 @@ Two rows in the tracker: `trae-intl` ([work.trae.ai/marketplace](https://work.tr
   `trae://trae.ai-ide/mcp-import?type=http&name=npmscan&config=eyJ1cmwiOiJodHRwczovL25wbXNjYW4uY29tL2FwaS9tY3AifQ%3D%3D`
 - The shyngys.shynbolatov@gmail.com account has been a TRAE Pro member since 2025.
 
+## Outcome: China (2026-10-28)
+
+Rejected. 柴文欣 (`chaiwenxin.svjm@bytedance.com`, TRAE CN) replied on 2026-10-26 asking to discuss cooperation over Feishu and sent the 《TRAE插件市场入驻｜信息收集表》. We returned it filled in as a PDF the same day, and the Feishu contact was accepted on 2026-10-27. They rejected it over Feishu; the reason isn't recorded. The China route has its own intake (that form plus a Feishu group), separate from the email address.
+
 ## What we send
 
 Emails: Gmail drafts "Marketplace listing request: NPMScan (npm supply-chain security)" to `feedback@mail.trae.ai`, and "插件市场上架申请：NPMScan — npm 供应链安全扫描插件" to `feedback@mail.trae.cn`.
