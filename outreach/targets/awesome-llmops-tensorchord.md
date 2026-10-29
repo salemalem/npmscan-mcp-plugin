@@ -30,3 +30,19 @@ sentences, no adjectives. Match that.
 **Watch out:** the list is "Awesome LLMOps", so the entry has to read as
 production AI infrastructure, not a general security tool. Frame it as the
 dependency-audit step for AI agents and LLMOps pipelines.
+
+## Submitted (2026-10-29)
+
+[tensorchord/Awesome-LLMOps#1070](https://github.com/tensorchord/Awesome-LLMOps/pull/1070),
+fork `salemalem/awesome-llmops`, branch `add-npmscan`.
+
+One row in `### Frameworks for LLM security`, alphabetically between EmbedGuard
+and Plexiglass. The star badge was written by hand as
+`![GitHub Badge](https://img.shields.io/github/stars/salemalem/npmscan-mcp-plugin.svg?style=flat-square)`
+because `scripts/generate-star-badges.py` only matches `- [` list lines and
+ignores table rows — the same thing PR #962 noted.
+
+Ran the repo's own scripts: `generate-star-badges.py` and
+`github-markdown-toc` both left the README unchanged apart from the new row.
+The PR body follows the shape of the recent merged PRs (what was added, where,
+license, activity, disclosure).

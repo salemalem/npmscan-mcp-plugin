@@ -27,3 +27,17 @@ an MCP server for coding agents. The hosted endpoint
 Lang: `typescript` if the plugin repo is the link, otherwise `—`. Activity
 column: days since last commit. Keep the description to one plain sentence
 about dependency auditing — no pricing, no marketing words.
+
+## Submitted (2026-10-29)
+
+[AlexMili/Awesome-MCP#349](https://github.com/AlexMili/Awesome-MCP/pull/349),
+fork `salemalem/awesome-mcp-alexmili`, branch `add-npmscan`.
+
+One row appended at the end of the `Dev, Code & Git` table, and the Contents
+count for that category bumped from 22 to 23. The row uses the devicon for
+TypeScript, leaves the official-marker emoji off, and keeps the `🟢 0d` / `0`
+placeholders that the refresh workflow normalizes.
+
+The repo checks the diff with `scripts/check_entry.py` on `pull_request_target`,
+reading the base README. Ran it locally against the upstream README and the PR
+diff: `OK  npmscan → Servers › Dev, Code & Git`.

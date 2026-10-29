@@ -39,3 +39,20 @@ n8n, YYLO. So hosted products are accepted.
 This list is the strictest on open-source licensing of the ten, and the
 maintainer prunes stale entries, so expect a possible "not maintained" follow-up
 if the plugin repo goes quiet. Keep the repo release cadence visible.
+
+## Submitted (2026-10-29)
+
+[alvinreal/awesome-opensource-ai#897](https://github.com/alvinreal/awesome-opensource-ai/pull/897),
+fork `salemalem/awesome-opensource-ai`, branch `add-npmscan`.
+
+One bullet at the end of `13. Developer Tools & Integrations › CLI Tools & API
+Clients`, next to the other MCP servers already listed there (Context7,
+DesktopCommander MCP, Mobile MCP, REA). The link is the public MIT plugin repo,
+not the private `salemalem/npmscan`.
+
+`python3 tools/validate_awesome.py --skip-remote` reports 0 errors and 0
+warnings. With a `GITHUB_TOKEN` the remote pass also passes for this repo; the
+10 archived-repo warnings it prints are pre-existing entries.
+
+The PR body uses the checklist that CONTRIBUTING.md asks for — Project, Why it
+belongs, Quality signals — and the validator output is quoted in it.

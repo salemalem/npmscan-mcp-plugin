@@ -31,3 +31,25 @@ AI-payload detection. No mention of plans or pricing.
 The list already carries a large cluster of AI security tooling — Darkmoon,
 Orchard Kit, Agentic Radar, Kontext CLI, Cynative, IronClaw, Enclave. Those
 all live in `### Tools`, which is where npmscan belongs.
+
+## Submitted (2026-10-29)
+
+[Jenqyang/Awesome-AI-Agents#692](https://github.com/Jenqyang/Awesome-AI-Agents/pull/692),
+fork `salemalem/awesome-ai-agents`, branch `add-npmscan`.
+
+One bullet at the end of `### Tools`, in the same format as the neighbouring
+lines: name, link to the public MIT plugin repo, one neutral sentence, and the
+`![GitHub Repo stars]` badge.
+
+The PR body fills in the repository's own template at
+`.github/pull_request_template.md` — Summary, Type of change, Target section,
+Quality checks, Proposed entry line, Evidence — with the boxes that are true
+ticked.
+
+This is the strictest list of the five on the "thin wrapper to a hosted
+service" rule: it rejects OSS wrappers whose value depends on a proprietary
+backend. The PR body answers that directly — the repository ships the five
+agent skills as plain `SKILL.md` files plus the Claude Code, Codex, Gemini CLI
+and Kimi manifests, so the audit procedure itself is reusable without the
+hosted product. The entry line carries no pricing, tier, credit or access
+wording.

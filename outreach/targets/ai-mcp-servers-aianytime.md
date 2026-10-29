@@ -43,3 +43,21 @@ endpoint. Do not mention pricing.
 Hosted MCP peers already merged: PlaceCall, CurlShot, Iris, Skycloak, Darkmoon.
 The list takes commercial hosted servers, so a paid service is not a problem
 here.
+
+## Submitted (2026-10-29)
+
+[AIAnytime/Awesome-MCP-Servers#385](https://github.com/AIAnytime/Awesome-MCP-Servers/pull/385),
+fork `salemalem/awesome-mcp-servers-aianytime`, branch `add-npmscan`.
+
+Two commits on purpose:
+
+1. `a2dc626` repairs `servers/lava.json`, which upstream merged truncated in
+   PR #367 (an unterminated string ending in `· Regi`). It broke
+   `scripts/lint.py` and the nightly site job on `main`, so the linter failed
+   on every branch. The repair only closes the string and the object.
+2. `0d8b370` adds `servers/npmscan.json` and the regenerated README.
+
+The JSON entry: category `security`, transport `http`, endpoint
+`https://npmscan.com/api/mcp`, registry `io.github.salemalem/npmscan`. The
+README was rebuilt with `python3 scripts/build.py --readme` (295 servers) and
+`scripts/lint.py` reported `OK — 295 servers, all well-formed.`
