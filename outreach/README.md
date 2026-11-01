@@ -70,6 +70,16 @@ What worked best, in order (October 2026):
 3. **Links inside lists you've found:** their "directories" sections and open PRs point to more (mcpnavi.jp, mcpstore.co and the DeepSeek Harness directories came from there).
 4. **Web search in each language** for directory sites ("MCP 导航 提交 收录", "каталог MCP серверов добавить").
 
+**Already mined, don't re-read (2026-11-01):** every directory site in these roundups is now in the tracker or was judged dead/out of scope. Only revisit them for sites added after that date.
+
+- [saascity: MCP server directories](https://saascity.io/mcp-server-directories): the most complete one, with submit steps, prices and paused queues (PulseMCP paused, mcp.so paid, MCP Market 4–6 week free queue)
+- [MCP discussion #669](https://github.com/modelcontextprotocol/.github/discussions/669): MCP Server Finder email, PulseMCP ingests the official registry
+- [studiomeyer: MCP marketplaces](https://studiomeyer.academy/recipes/9.3-mcp-marketplaces) and [geekflare](https://geekflare.com/guides/mcp-server-directories/): only the big names, nothing new
+- [Langdock MCP directory](https://docs.langdock.com/en/using-langdock/integrations/mcp-directory), [EveryDev skills directory](https://www.everydev.ai/tools/skills-directory), [Claude Skills Hub](https://claudeskills.info/about/), [Skills Directory](https://www.skillsdirectory.com/about): each became its own row
+- Dead or unreachable that day: mcphunt.com, mcp.ing, agentskills.so, claudepro.directory, mcpservers.cn, hub.continue.dev, mcpindex.net. remoteopenclaw.com redirects to claudemarket.ai (already tracked). mcpize.com only lists servers deployed on MCPize.
+
+**Already screened on GitHub:** [`targets/screened-repos.txt`](targets/screened-repos.txt) lists about 1,900 repos checked on 2026-11-01 and not added, with their outside-merge, open-PR and star counts. Drop those (and every repo URL in `tracker.csv` and `targets/`) from new search results before checking activity. Re-check them after about 2027-02.
+
 Keyword queries that did find things: Chinese `MCP 服务器`, `Claude Code 插件`, `Claude Code 中文`, `开源安全工具`; Russian `MCP серверы`, `awesome mcp ru`, `каталог MCP`; Korean `Claude Code 플러그인`.
 
 **Less common languages** (Hindi, Bengali, Polish, Czech, Hungarian, Romanian, Greek, Hebrew, Persian, Arabic, Georgian, Kazakh, Swahili and others; about 200 queries in October 2026). The query shapes that found real lists were `topic:awesome-list <country or language>`, romanized `awesome <country>`, and `topic:awesome-list "<local phrase for AI>" in:readme`. Expect low yield: almost everything is a "made in <country>" list, a local-services MCP catalog, NLP resources for that language, or learning material. Out of 60 lists checked, three could take npmscan, all of them small. A "made in" list only fits if npmscan's maintainer is from that country. In English searches, `awesome polish` mostly matches the word "polished".
