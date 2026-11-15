@@ -24,7 +24,7 @@ export NPMSCAN_AGENT=claude-opus-5.5   # or gpt-5.1, gemini-2.5-pro, kimi-k2, ..
 | Column | Meaning |
 |---|---|
 | `id` | Short kebab-case key; matches `targets/<id>.md` where one exists |
-| `route` | `github_pr`, `github_issue`, `form`, `email`, `in_app`, `crawl`, `cli`, `none`, `unsolicited` (listed without us submitting) |
+| `route` | `github_pr`, `github_issue`, `form`, `email`, `in_app`, `crawl`, `cli`, `none`, `unsolicited` (listed without us submitting), `user` (a project that uses npmscan rather than lists it; status `no_route`, details in notes) |
 | `status` | `todo`, `prep` (needs repo work or a decision), `drafted` (ready, not sent), `submitted`, `listed`, `covered` (reached via another listing), `no_route`, `skipped`, `closed` |
 | `next_action` | What happens next, and who does it if it's the user (`user: ...`) |
 | `follow_up_on` | Date to look again; `refresh.ts` lists rows that are due |

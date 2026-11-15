@@ -25,7 +25,7 @@ export const STATUSES = [
 ] as const;
 
 /** How we submitted. */
-export const ROUTES = ['github_pr', 'github_issue', 'form', 'email', 'in_app', 'crawl', 'cli', 'none', 'unsolicited'] as const;
+export const ROUTES = ['github_pr', 'github_issue', 'form', 'email', 'in_app', 'crawl', 'cli', 'none', 'unsolicited', 'user'] as const;
 
 const GENERIC_AGENTS = new Set(['ai', 'agent', 'llm', 'bot', 'assistant', 'model', 'unknown', 'me']);
 
